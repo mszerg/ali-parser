@@ -67,9 +67,19 @@ for ($j = 0 ; $j < $rows ; ++$j)
     $row = mysql_fetch_row($result);
     echo "<tr>";
 
-    for ($k = 0 ; $k < 12 ; ++$k)
+    /*for ($k = 0 ; $k < 12 ; ++$k)
         if (($k != 2)  and ($k != 3) and ($k != 10))
-            echo "<td>$row[$k]</td>";
+            echo "<td>$row[$k]</td>";*/
+        echo "<td>$row[0]</td>";
+        echo "<td>$row[1]</td>";
+        echo "<td><img src=\"image.php?id=" . $row[2] . "\" alt=\"\" /></td>";
+        echo "<td>$row[5]</td>";
+        echo "<td>$row[6]</td>";
+        echo "<td>$row[7]</td>";
+        echo "<td>$row[8]</td>";
+        echo "<td>$row[9]</td>";
+        echo "<td>$row[11]</td>";
+
 
     echo "</tr>";
 }

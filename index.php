@@ -60,6 +60,15 @@ foreach($html->find('.ae-order') as $order)
          foreach ($order->find('.order-bd') as $product)
 	    {
             $blob_picture = str_replace('src="','src="www-ali/',$product->find('a img',0)->outertext);
+            $blob_picture = mb_substr($blob_picture,mb_strpos($blob_picture,'src="')+5,mb_strlen($blob_picture));
+            $blob_picture = str_replace('" alt="">','',$blob_picture);
+
+            $fileName = $blob_picture;  //имя файла
+            $f = fopen($fileName,"r");   //открываем файл
+            $read = fread($f,filesize($fileName));  //считываем содержимое
+            fclose($f);  //закрываем файл
+            $blob_picture = addslashes($read);
+
             $txt_name_tovar = $product->find('.desc',0)->plaintext;
             $txt_manager = $product->find('.seller-sign',0)->plaintext;
             $dec_price = $product->find('.price',0)->outertext;
@@ -93,6 +102,7 @@ foreach($html->find('.ae-order') as $order)
             }
 
 			echo "<tr><td></td><td></td>";
+            //header("Content-Type: image/jpg");  //указываем браузеру что это изображение
 			echo "<td>" . $blob_picture .       "</td>";
 			echo "<td>" . $txt_name_tovar .     "</td>";
 			echo "<td>" . $txt_manager .        "</td>";
