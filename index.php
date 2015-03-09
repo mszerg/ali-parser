@@ -60,6 +60,7 @@ foreach($html->find('.ae-order') as $order)
          foreach ($order->find('.order-bd') as $product)
 	    {
             $blob_picture = str_replace('src="','src="www-ali/',$product->find('a img',0)->outertext);
+            $blom_image=$blob_picture;
             $blob_picture = mb_substr($blob_picture,mb_strpos($blob_picture,'src="')+5,mb_strlen($blob_picture));
             $blob_picture = str_replace('" alt="">','',$blob_picture);
 
@@ -75,7 +76,8 @@ foreach($html->find('.ae-order') as $order)
             $dec_price = mb_substr($dec_price,mb_strpos($dec_price,'$')+2 ,mb_strlen($dec_price)-2);
             $int_count = $product->find('.quantity',0)->plaintext;
             $txt_status = $product->find('.f-left',0)->outertext;
-
+            $txt_snapshot = $product->find('.desc a',0)->outertext;
+            $txt_snapshot = str_replace(trim($txt_name_tovar),'Снимок заказа',$txt_snapshot);
 
             if ($k == 1) {
 
@@ -103,14 +105,15 @@ foreach($html->find('.ae-order') as $order)
 
 			echo "<tr><td></td><td></td>";
             //header("Content-Type: image/jpg");  //указываем браузеру что это изображение
-			echo "<td>" . $blob_picture .       "</td>";
+			echo "<td>" . $blom_image .       "</td>";
 			echo "<td>" . $txt_name_tovar .     "</td>";
 			echo "<td>" . $txt_manager .        "</td>";
 			//echo $product->find('.sell-sp-main',0)->outertext . "</td>";
 			echo "<td>" . $dec_price .          "</td>";
 			echo "<td>" . $int_count .          "</td>";
-			//echo "<td>" . $txt_status .         "</td>";
-			echo "<td>" . $product->find('.order-list-mobile-orders',0)->outertext . "</td></tr>";
+			echo "<td>" . $product->find('.order-list-mobile-orders',0)->outertext . "</td>";
+            echo "<td>" . $txt_snapshot .        "</td></tr>";
+
 			//echo $product->outertext . '<br>';
 			/*$pr = $product->find('.desc a',0)->href;
 			echo $pr . '<br>';

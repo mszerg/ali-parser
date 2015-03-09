@@ -53,14 +53,25 @@ mysql_query("SET NAMES utf8");
 //addWhere("","");
 $result = mysql_query($sql);
 
-if (!$result) die ("Database access failed: " . mysql_error());
+//if (!$result) die ("Database access failed: " . mysql_error());
+
+if (isset($_POST['u_count']) && isset($_POST['id_tovar_order']))
+{
+    $id_tovar_order = get_post('id_tovar_order');
+    $u_count = get_post('u_count');
+    $query = "UPDATE tbl_tovar_order SET count='$u_count' WHERE id_tovar_order='$id_tovar_order'";
+    echo $query;
+    if (!mysql_query($query, $db_server))
+        echo "Update failed: $query<br>" .
+            mysql_error() . "<br><br>";
+}
 
 $rows = mysql_num_rows($result);
 
 ?>
 
 <?php
-echo "<table border=\"1\"> <tr><td>№ Заказа</td><td>Дата заказа</td><td>Фото</td><td>Товар</td><td>Контакт</td><td>Сумма заказа,у.е.</td><td>Количество партий</td><td>Количество шт</td><td>Статус заказа</td></tr>";
+echo "<table border=\"1\"> <tr><td>№ Заказа</td><td>Дата заказа</td><td>Фото</td><td>Товар</td><td>Контакт</td><td>Сумма заказа,у.е.</td><td>Количество партий</td><td>Количество шт</td><td>Цена за ед., у.е.</td><td>Статус заказа</td></tr>";
 
 for ($j = 0 ; $j < $rows ; ++$j)
 {
@@ -70,19 +81,33 @@ for ($j = 0 ; $j < $rows ; ++$j)
     /*for ($k = 0 ; $k < 12 ; ++$k)
         if (($k != 2)  and ($k != 3) and ($k != 10))
             echo "<td>$row[$k]</td>";*/
-        echo "<td>$row[0]</td>";
-        echo "<td>$row[1]</td>";
+        echo  <<<_END
+        <td><a href="http://trade.aliexpress.com/order_detail.htm?orderId=$row[0]" target="_blank" data-spm-anchor-id="0.0.0.0">$row[0]</a></td>
+_END;
+        echo "<td>" . date("Y-m-d", $row[1]) . "</td>";
         echo "<td><img src=\"image.php?id=" . $row[2] . "\" alt=\"\" /></td>";
         echo "<td>$row[5]</td>";
         echo "<td>$row[6]</td>";
         echo "<td>$row[7]</td>";
         echo "<td>$row[8]</td>";
-        echo "<td>$row[9]</td>";
+        //echo "<td>$row[9]</td>";
+        echo <<<_END
+        <form name="update_count" action="" method="post">
+            <td><input type="hidden" name="id_tovar_order" value=$row[2]>
+            <input type="text" name="u_count" value="$row[9]">
+            <input type="submit" value="Об-ть кол-во"></td>
+        </form>
+_END;
+        echo "<td>" . number_format($row[7]/$row[9], 2, '.', ' ') . "</td>";
         echo "<td>$row[11]</td>";
-
 
     echo "</tr>";
 }
-
 echo "</table>";
+
+function get_post($var)
+{
+    return mysql_real_escape_string($_POST[$var]);
+}
+
 ?>
