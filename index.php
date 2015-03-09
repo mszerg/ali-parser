@@ -6,7 +6,7 @@ require_once 'library/simple_html_dom.php';
 $html = new simple_html_dom();
 $html_2 = new simple_html_dom();
 //загружаем в него данные
-$html = file_get_html('./www-ali/ali_order_2.htm');
+$html = file_get_html('www-ali/ali_order_2.htm');
 //находим все ссылки на странице и...
 
 /*foreach($html->find('a') as $element)
@@ -59,7 +59,7 @@ foreach($html->find('.ae-order') as $order)
 
          foreach ($order->find('.order-bd') as $product)
 	    {
-            $blob_picture = $product->find('a',0)->outertext;
+            $blob_picture = str_replace('src="','src="www-ali/',$product->find('a img',0)->outertext);
             $txt_name_tovar = $product->find('.desc',0)->plaintext;
             $txt_manager = $product->find('.seller-sign',0)->plaintext;
             $dec_price = $product->find('.price',0)->outertext;
