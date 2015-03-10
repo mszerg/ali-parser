@@ -71,7 +71,7 @@ $rows = mysql_num_rows($result);
 ?>
 
 <?php
-echo "<table border=\"1\"> <tr><td>№ Заказа</td><td>Дата заказа</td><td>Фото</td><td>Товар</td><td>Контакт</td><td>Сумма заказа,у.е.</td><td>Количество партий</td><td>Количество шт</td><td>Цена за ед., у.е.</td><td>Статус заказа</td></tr>";
+echo "<table border=\"1\"> <tr><td>№ Заказа</td><td>Дата заказа</td><td>Фото</td><td>Товар</td><td>Контакт</td><td>Сумма заказа,у.е.</td><td>Количество партий</td><td>Количество шт</td><td>Цена за ед., у.е.</td><td>Статус заказа</td><td>Снимок заказа</td></tr>";
 
 for ($j = 0 ; $j < $rows ; ++$j)
 {
@@ -99,7 +99,8 @@ _END;
         </form>
 _END;
         echo "<td>" . number_format($row[7]/$row[9], 2, '.', ' ') . "</td>";
-        echo "<td>$row[11]</td>";
+        echo "<td>$row[12]</td>";
+        echo "<td>$row[10]</td>";
 
     echo "</tr>";
 }
