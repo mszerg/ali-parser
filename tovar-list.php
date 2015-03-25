@@ -1,7 +1,10 @@
+<?php
+header('Content-type: text/html; charset=utf-8');
+?>
 <form name="form" action="" method="post">
     <table>
         <tr>
-            <td>Заказ   <input type="text" name="find_order" /></td>
+            <td>Заказ   <input type="text" name="find_order"  /></td>
             <td>Нач дата<input type="text" name="begin_date" /></td>
             <td>Кон дата<input type="text" name="end_date" /></td>
             <td>Товар   <input type="text" name="find_tovar" /></td>
@@ -29,14 +32,14 @@ if (!empty($_POST["filter"])) {
     //if ($_POST["find_order"]) $where = addWhere($where, "`wifi` = '1'");
     if ($_POST["find_order"]) $where = addWhere($where, "`namber_order` = '" . htmlspecialchars($_POST["find_order"])) . "'";
     if ($_POST["find_tovar"]) $where = addWhere($where, "`name` like '%" . htmlspecialchars($_POST["find_tovar"])) . "%'";
-    $sql  = "SELECT `tbl_order`.`namber_order`,`tbl_order`.`date_order`, `tbl_tovar_order`.* , `tbl_order`.`status` FROM tbl_tovar_order INNER JOIN `db_parser`.`tbl_order` ON `tbl_tovar_order`.`id_order` = `tbl_order`.`namber_order`";
+    $sql  = "SELECT `tbl_order`.`namber_order`,`tbl_order`.`date_order`, `tbl_tovar_order`.* , `tbl_order`.`status` FROM tbl_tovar_order INNER JOIN `tbl_order` ON `tbl_tovar_order`.`id_order` = `tbl_order`.`namber_order`";
     if ($where) $sql .= " WHERE $where";
-    echo $sql;
+    $sql .= " ORDER BY `namber_order` DESC";
 }
 ?>
 
 <?php
-header('Content-type: text/html; charset=utf-8');
+//header('Content-type: text/html; charset=utf-8');
 
 ///////////////////////////////// BEGIN Podkluchaem BD //////////////////////////////
 require_once 'login.php';
@@ -71,36 +74,34 @@ $rows = mysql_num_rows($result);
 ?>
 
 <?php
-echo "<table border=\"1\"> <tr><td>№ Заказа</td><td>Дата заказа</td><td>Фото</td><td>Товар</td><td>Контакт</td><td>Сумма заказа,у.е.</td><td>Количество партий</td><td>Количество шт</td><td>Цена за ед., у.е.</td><td>Статус заказа</td><td>Снимок заказа</td></tr>";
+echo "<table border=\"1\"> <tr><td>№ Заказа</td><td>Дата заказа</td><td>Фото</td><td>Товар</td><td>Контакт</td><td>Сумма заказа,у.е.</td><td>Количество партий</td><td>Количество шт</td><td>Цена за ед., у.е.</td><td>Статус заказа</td><td>Статус отмены</td><td>Снимок заказа</td></tr>";
 
 for ($j = 0 ; $j < $rows ; ++$j)
 {
-    $row = mysql_fetch_row($result);
+    $row = mysql_fetch_assoc($result);
     echo "<tr>";
 
-    /*for ($k = 0 ; $k < 12 ; ++$k)
-        if (($k != 2)  and ($k != 3) and ($k != 10))
-            echo "<td>$row[$k]</td>";*/
         echo  <<<_END
-        <td><a href="http://trade.aliexpress.com/order_detail.htm?orderId=$row[0]" target="_blank" data-spm-anchor-id="0.0.0.0">$row[0]</a></td>
+        <td><a href="http://trade.aliexpress.com/order_detail.htm?orderId=$row[namber_order]" target="_blank" data-spm-anchor-id="0.0.0.0">$row[namber_order]</a></td>
 _END;
-        echo "<td>" . date("Y-m-d", $row[1]) . "</td>";
-        echo "<td><img src=\"image.php?id=" . $row[2] . "\" alt=\"\" /></td>";
-        echo "<td>$row[5]</td>";
-        echo "<td>$row[6]</td>";
-        echo "<td>$row[7]</td>";
-        echo "<td>$row[8]</td>";
+        echo "<td>" . date("Y-m-d", $row[date_order]) . "</td>";
+        echo "<td><img src=\"image.php?id=" . $row[id_tovar_order] . "\" alt=\"\" /></td>";
+        echo "<td>$row[name]</td>";
+        echo "<td>$row[manager]</td>";
+        echo "<td>$row[price]</td>";
+        echo "<td>$row[count_partiy]</td>";
         //echo "<td>$row[9]</td>";
         echo <<<_END
         <form name="update_count" action="" method="post">
-            <td><input type="hidden" name="id_tovar_order" value=$row[2]>
-            <input type="text" name="u_count" value="$row[9]">
+            <td><input type="hidden" name="id_tovar_order" value=$row[namber_order]>
+            <input type="text" name="u_count" value="$row[count]">
             <input type="submit" value="Об-ть кол-во"></td>
         </form>
 _END;
-        echo "<td>" . number_format($row[7]/$row[9], 2, '.', ' ') . "</td>";
-        echo "<td>$row[12]</td>";
-        echo "<td>$row[10]</td>";
+        echo "<td>" . number_format($row[price]*$row[count_partiy]/$row[count], 2, '.', ' ') . "</td>";
+        echo "<td>$row[status]</td>";
+        echo "<td>$row[status_otmeni]</td>";
+        echo "<td>$row[snapshot]</td>";
 
     echo "</tr>";
 }

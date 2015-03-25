@@ -1,0 +1,13 @@
+.tip-me {position:absolute;width:200px;padding:0 4px 4px 0;background:url(http://i02.i.aliimg.com/images/eng/wholesale/sprite/sprite_tips.png) no-repeat right bottom;zoom:1;}
+.tip-me:after {display:block;clear:both;height:0;visibility:hidden;}
+.tip-header {margin-bottom:-21px;height:21px;text-indent:10px;font:700 12px/21px Arial;background:#E9F4F4;overflow:hidden;}
+.tip-text {padding:5px 14px 5px 10px;border:1px solid #91B4E0;border-right:0 none;border-bottom:0 none;zoom:1;}
+.tip-me-hd .tip-text {padding-top:26px;}
+.tip-close {position:absolute;top:5px;right:8px;display:block;width:11px;height:11px;background:url(http://i02.i.aliimg.com/images/eng/wholesale/sprite/sprite_tips.png) no-repeat 1px -99px;}
+.tip-arrow {position:absolute;display:block;background-image:url(http://i02.i.aliimg.com/images/eng/wholesale/sprite/sprite_tips.png);background-repeat:no-repeat;}
+.tip-arrow-left {top:6px;left:-6px;width:7px;height:11px;background-position:0 -6px;overflow:hidden;}
+.tip-arrow-top, .tip-arrow-topright {top:-6px;width:11px;height:7px;background-position:-6px 0;overflow:hidden;}
+.tip-arrow-top {left:10px;}
+.tip-arrow-topright {right:15px;}
+.tip-me-hd .tip-arrow-left {background-position:0 -56px;}
+.tip-me-hd .tip-arrow-top, .tip-me-hd .tip-arrow-topright {background-position:-6px -50px;}
