@@ -1,5 +1,5 @@
 <?php
-header('Content-type: text/html; charset=utf-8');
+
 ?>
 <form name="form" action="" method="post">
     <table>
@@ -16,6 +16,16 @@ header('Content-type: text/html; charset=utf-8');
 </form>
 
 <?php
+
+if (!empty($_POST["filter"])) {
+	SetCookie("filtr_tovar",$_POST["find_tovar"],time()+60*60*24,'/');
+	//SetCookie("Test","Value");
+	if (SetCookie("Test","Value")) echo "<h3>Cookies успешно установлены!</h3>";
+	echo "куки записан";
+}
+
+header('Content-type: text/html; charset=utf-8');
+
 function addWhere($where, $add, $and = true) {
     if ($where) {
         if ($and) $where .= " AND $add";
@@ -35,6 +45,12 @@ if (!empty($_POST["filter"])) {
     $sql  = "SELECT `tbl_order`.`namber_order`,`tbl_order`.`date_order`, `tbl_tovar_order`.* , `tbl_order`.`status` FROM tbl_tovar_order INNER JOIN `tbl_order` ON `tbl_tovar_order`.`id_order` = `tbl_order`.`namber_order`";
     if ($where) $sql .= " WHERE $where";
     $sql .= " ORDER BY `namber_order` DESC";
+	echo "1";
+}
+else
+{
+	$sql  = "SELECT `tbl_order`.`namber_order`,`tbl_order`.`date_order`, `tbl_tovar_order`.* , `tbl_order`.`status` FROM tbl_tovar_order INNER JOIN `tbl_order` ON `tbl_tovar_order`.`id_order` = `tbl_order`.`namber_order`  ORDER BY `namber_order` DESC";
+	echo "2";
 }
 ?>
 
@@ -54,7 +70,8 @@ mysql_query("SET NAMES utf8");
 
 //$query  = "SELECT `tbl_order`.`namber_order`,`tbl_order`.`date_order`, `tbl_tovar_order`.* FROM tbl_tovar_order INNER JOIN `db_parser`.`tbl_order` ON `tbl_tovar_order`.`id_order` = `tbl_order`.`namber_order`";
 //addWhere("","");
-$result = mysql_query($sql);
+//echo "1 - " . $sql;
+
 
 //if (!$result) die ("Database access failed: " . mysql_error());
 
@@ -63,12 +80,13 @@ if (isset($_POST['u_count']) && isset($_POST['id_tovar_order']))
     $id_tovar_order = get_post('id_tovar_order');
     $u_count = get_post('u_count');
     $query = "UPDATE tbl_tovar_order SET count='$u_count' WHERE id_tovar_order='$id_tovar_order'";
-    echo $query;
+    //echo $query;
     if (!mysql_query($query, $db_server))
         echo "Update failed: $query<br>" .
             mysql_error() . "<br><br>";
 }
 
+$result = mysql_query($sql);
 $rows = mysql_num_rows($result);
 
 ?>
@@ -93,7 +111,7 @@ _END;
         //echo "<td>$row[9]</td>";
         echo <<<_END
         <form name="update_count" action="" method="post">
-            <td><input type="hidden" name="id_tovar_order" value=$row[namber_order]>
+            <td><input type="hidden" name="id_tovar_order" value=$row[id_tovar_order]>
             <input type="text" name="u_count" value="$row[count]">
             <input type="submit" value="Об-ть кол-во"></td>
         </form>
