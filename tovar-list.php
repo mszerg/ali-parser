@@ -1,30 +1,40 @@
 <?php
 
-?>
+
+$filtr_tovar = htmlspecialchars($_COOKIE["filtr_tovar"]);
+echo <<<_END
 <form name="form" action="" method="post">
     <table>
         <tr>
             <td>Заказ   <input type="text" name="find_order"  /></td>
             <td>Нач дата<input type="text" name="begin_date" /></td>
             <td>Кон дата<input type="text" name="end_date" /></td>
-            <td>Товар   <input type="text" name="find_tovar" /></td>
+            <td>Товар   <input type="text" name="find_tovar" value=$filtr_tovar></td>
             <td colspan="2">
                 <input type="submit" name="filter" value="Фильтр" />
             </td>
         </tr>
     </table>
 </form>
+_END;
+
+?>
 
 <?php
 
-if (!empty($_POST["filter"])) {
-	SetCookie("filtr_tovar",$_POST["find_tovar"],time()+60*60*24,'/');
+if (!empty($_POST["filter"]) and (isset($_POST['find_tovar']))) {
+	//SetCookie("filtr_tovar",$_POST["find_tovar"],time()+60*60*24,'/');
 	//SetCookie("Test","Value");
-	if (SetCookie("Test","Value")) echo "<h3>Cookies успешно установлены!</h3>";
+	if (SetCookie("filtr_tovar",$_POST["find_tovar"])) {
+        $filtr_tovar = htmlspecialchars($_COOKIE["filtr_tovar"]);
+        echo "<h3>Cookies успешно установлены! - " . $filtr_tovar . "</h3>";
+    }
 	echo "куки записан";
 }
-
 header('Content-type: text/html; charset=utf-8');
+
+if (!empty($_POST["refresh_status"])) load_status($_POST['id_order']);
+
 
 function addWhere($where, $add, $and = true) {
     if ($where) {
@@ -45,12 +55,14 @@ if (!empty($_POST["filter"])) {
     $sql  = "SELECT `tbl_order`.`namber_order`,`tbl_order`.`date_order`, `tbl_tovar_order`.* , `tbl_order`.`status` FROM tbl_tovar_order INNER JOIN `tbl_order` ON `tbl_tovar_order`.`id_order` = `tbl_order`.`namber_order`";
     if ($where) $sql .= " WHERE $where";
     $sql .= " ORDER BY `namber_order` DESC";
-	echo "1";
+	//echo "1";
 }
 else
 {
-	$sql  = "SELECT `tbl_order`.`namber_order`,`tbl_order`.`date_order`, `tbl_tovar_order`.* , `tbl_order`.`status` FROM tbl_tovar_order INNER JOIN `tbl_order` ON `tbl_tovar_order`.`id_order` = `tbl_order`.`namber_order`  ORDER BY `namber_order` DESC";
-	echo "2";
+    if (isset($_COOKIE["filtr_tovar"])) $where_cookie=" WHERE `name` like '%" . htmlspecialchars($_COOKIE["filtr_tovar"]) . "%'";
+    //echo $where_cookie . "</br>";
+    $sql  = "SELECT `tbl_order`.`namber_order`,`tbl_order`.`date_order`, `tbl_tovar_order`.* , `tbl_order`.`status` FROM tbl_tovar_order INNER JOIN `tbl_order` ON `tbl_tovar_order`.`id_order` = `tbl_order`.`namber_order`". $where_cookie . " ORDER BY `namber_order` DESC";
+	//echo "2 " . $sql;
 }
 ?>
 
@@ -98,7 +110,6 @@ for ($j = 0 ; $j < $rows ; ++$j)
 {
     $row = mysql_fetch_assoc($result);
     echo "<tr>";
-
         echo  <<<_END
         <td><a href="http://trade.aliexpress.com/order_detail.htm?orderId=$row[namber_order]" target="_blank" data-spm-anchor-id="0.0.0.0">$row[namber_order]</a></td>
 _END;
@@ -117,7 +128,14 @@ _END;
         </form>
 _END;
         echo "<td>" . number_format($row[price]*$row[count_partiy]/$row[count], 2, '.', ' ') . "</td>";
-        echo "<td>$row[status]</td>";
+        echo "<td>$row[status]";
+        echo <<<_END
+        <form name="update_status" action="" method="post">
+            <input type="hidden" name="id_tovar_order" value=$row[id_tovar_order]>
+            <input type="hidden" name="id_order" value=$row[namber_order]>
+            <input type="submit" name="refresh_status" value="Об-ть статус"></td>
+        </form>
+_END;
         echo "<td>$row[status_otmeni]</td>";
         echo "<td>$row[snapshot]</td>";
 
@@ -128,6 +146,67 @@ echo "</table>";
 function get_post($var)
 {
     return mysql_real_escape_string($_POST[$var]);
+}
+
+function load_status($namber_order)
+{
+    echo "load status - " . $namber_order;
+    echo  <<<_END
+        <a href="http://trade.aliexpress.com/order_detail.htm?orderId=$namber_order" target="_blank" data-spm-anchor-id="0.0.0.0">$namber_order</a>
+_END;
+    $result = get_web_page("http://trade.aliexpress.com/order_detail.htm?orderId=64091038801401");
+    echo $result['errno'];
+    if (($result['errno'] != 0 )||($result['http_code'] != 200))
+    {
+        echo $result['errmsg'];
+    }
+    else
+    {
+        $page = $result['content'];
+        echo "Загружаю страницу";
+        echo $page;
+    }
+
+    /*require_once 'library/simple_html_dom.php';
+    $html = new simple_html_dom();
+    //$html = file_get_html("http://trade.aliexpress.com/order_detail.htm?orderId=" . $namber_order);
+    $html = file_get_html("http://trade.aliexpress.com/order_detail.htm?orderId=64091038801401");
+    echo $html->innertext;
+    $txt_status = $html->find('.order-status', 0)->outertext;
+    $txt_status_otmeni = $html->find('.trade-status', 0)->outertext;
+    echo $txt_status . " -st1</br>";
+    echo $txt_status_otmeni . " -st2</br>";
+
+    $html->clear();
+    unset($html);*/
+}
+
+
+function get_web_page($url)
+{
+    $uagent = "Opera/9.80 (Windows NT 6.1; WOW64) Presto/2.12.388 Version/12.14";
+
+    $ch = curl_init( $url );
+
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);   // возвращает веб-страницу
+    curl_setopt($ch, CURLOPT_HEADER, 0);           // не возвращает заголовки
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);   // переходит по редиректам
+    curl_setopt($ch, CURLOPT_ENCODING, "");        // обрабатывает все кодировки
+    curl_setopt($ch, CURLOPT_USERAGENT, $uagent);  // useragent
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 120); // таймаут соединения
+    curl_setopt($ch, CURLOPT_TIMEOUT, 120);        // таймаут ответа
+    curl_setopt($ch, CURLOPT_MAXREDIRS, 10);       // останавливаться после 10-ого редиректа
+
+    $content = curl_exec( $ch );
+    $err     = curl_errno( $ch );
+    $errmsg  = curl_error( $ch );
+    $header  = curl_getinfo( $ch );
+    curl_close( $ch );
+
+    $header['errno']   = $err;
+    $header['errmsg']  = $errmsg;
+    $header['content'] = $content;
+    return $header;
 }
 
 ?>
