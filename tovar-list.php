@@ -1,7 +1,48 @@
 <?php
+header('Content-type: text/html; charset=utf-8');
 
+session_start();
+/*if (!isset($_SESSION['count'])) {
+  $_SESSION['count'] = 0;
+} else {
+  $_SESSION['count']++;
+}*/
 
-$filtr_tovar = htmlspecialchars($_COOKIE["filtr_tovar"]);
+$_SESSION['filtr_tovar'] = $_POST["find_tovar"];
+$_SESSION['filtr_order'] = $_POST["find_order"];
+$_SESSION['filtr_begin_date'] = $_POST["begin_date"];
+$_SESSION['filtr_end_date'] = $_POST["end_date"];
+
+/*if (!empty($_POST["filter"]) and (isset($_POST['find_tovar']) or isset($_POST['find_order']) or isset($_POST['begin_date']) or isset($_POST['end_date']))) {
+	//echo $_POST["find_tovar"] . "</br>";
+	//echo SetCookie("filtr_tovar",$_POST["find_tovar"]) . "</br>";
+	//SetCookie("Test","Value");
+	//echo "Begin cookie";
+	$cook_1 = SetCookie("filtr_tovar",$_POST["find_tovar"]);
+	$cook_2 = SetCookie("filtr_order",$_POST["find_order"]);
+	$cook_3 = SetCookie("filtr_begin_date",$_POST["begin_date"]);
+	$cook_4 = SetCookie("filtr_end_date",$_POST["end_date"]);
+	
+	if ($cook_1) {
+        $filtr_tovar = htmlspecialchars($_COOKIE["filtr_tovar"]);
+        echo "<h3>Cookies успешно установлены! - " . $filtr_tovar . "</h3>";
+    }
+	if ($cook_2) {
+        $filtr_order = htmlspecialchars($_COOKIE["filtr_order"]);
+        echo "<h3>Cookies успешно установлены! - " . $filtr_order . "</h3>";
+    }
+	if ($cook_3) {
+        $filtr_begin_date = htmlspecialchars($_COOKIE["filtr_begin_date"]);
+        echo "<h3>Cookies успешно установлены! - " . $filtr_begin_date . "</h3>";
+    }
+	if ($cook_4) {
+        $filtr_end_date = htmlspecialchars($_COOKIE["filtr_end_date"]);
+        echo "<h3>Cookies успешно установлены! - " . $filtr_end_date . "</h3>";
+    }
+	//echo "куки записан";
+}*/
+
+$filtr_tovar = htmlspecialchars($_SESSION['filtr_tovar']);
 echo <<<_END
 <form name="form" action="" method="post">
     <table>
@@ -18,20 +59,11 @@ echo <<<_END
 </form>
 _END;
 
+
 ?>
 
 <?php
 
-if (!empty($_POST["filter"]) and (isset($_POST['find_tovar']))) {
-	//SetCookie("filtr_tovar",$_POST["find_tovar"],time()+60*60*24,'/');
-	//SetCookie("Test","Value");
-	if (SetCookie("filtr_tovar",$_POST["find_tovar"])) {
-        $filtr_tovar = htmlspecialchars($_COOKIE["filtr_tovar"]);
-        echo "<h3>Cookies успешно установлены! - " . $filtr_tovar . "</h3>";
-    }
-	echo "куки записан";
-}
-header('Content-type: text/html; charset=utf-8');
 
 if (!empty($_POST["refresh_status"])) load_status($_POST['id_order']);
 
@@ -46,8 +78,8 @@ function addWhere($where, $add, $and = true) {
 }
 if (!empty($_POST["filter"])) {
     $where = "";
-    if ($_POST["begin_date"]) $where = addWhere($where, "`date_order` >= '".htmlspecialchars($_POST["begin_date"]))."'";
-    if ($_POST["end_date"]) $where = addWhere($where, "`date_order` <= '".htmlspecialchars($_POST["end_date"]))."'";
+    if ($_POST["begin_date"]) $where = addWhere($where, "`date_order` >= '".htmlspecialchars(strtotime($_POST["begin_date"])))."'";
+    if ($_POST["end_date"]) $where = addWhere($where, "`date_order` <= '".htmlspecialchars(strtotime($_POST["end_date"])))."'";
     //if ($_POST["manufacturers"]) $where = addWhere($where, "`manufacturer` IN (".htmlspecialchars(implode(",", $_POST["manufacturers"])).")");
     //if ($_POST["find_order"]) $where = addWhere($where, "`wifi` = '1'");
     if ($_POST["find_order"]) $where = addWhere($where, "`namber_order` = '" . htmlspecialchars($_POST["find_order"])) . "'";
@@ -55,11 +87,11 @@ if (!empty($_POST["filter"])) {
     $sql  = "SELECT `tbl_order`.`namber_order`,`tbl_order`.`date_order`, `tbl_tovar_order`.* , `tbl_order`.`status` FROM tbl_tovar_order INNER JOIN `tbl_order` ON `tbl_tovar_order`.`id_order` = `tbl_order`.`namber_order`";
     if ($where) $sql .= " WHERE $where";
     $sql .= " ORDER BY `namber_order` DESC";
-	//echo "1";
+	//echo $sql;
 }
 else
 {
-    if (isset($_COOKIE["filtr_tovar"])) $where_cookie=" WHERE `name` like '%" . htmlspecialchars($_COOKIE["filtr_tovar"]) . "%'";
+    if ($filtr_tovar != '') $where_cookie=" WHERE `name` like '%" . $filtr_tovar . "%'";
     //echo $where_cookie . "</br>";
     $sql  = "SELECT `tbl_order`.`namber_order`,`tbl_order`.`date_order`, `tbl_tovar_order`.* , `tbl_order`.`status` FROM tbl_tovar_order INNER JOIN `tbl_order` ON `tbl_tovar_order`.`id_order` = `tbl_order`.`namber_order`". $where_cookie . " ORDER BY `namber_order` DESC";
 	//echo "2 " . $sql;
