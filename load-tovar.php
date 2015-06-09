@@ -93,7 +93,11 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
 
                 $fileName = $blob_picture;  //имя файла
                 $f = fopen($fileName, "r");   //открываем файл
-                $read = fread($f, filesize($fileName));  //считываем содержимое
+				if (!$f) {
+					trigger_error('Не могу найти файл . $fileName');
+					exit;
+				}
+				$read = fread($f, filesize($fileName));  //считываем содержимое
                 fclose($f);  //закрываем файл
                 $blob_picture = addslashes($read);
 
