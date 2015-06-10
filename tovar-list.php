@@ -2,55 +2,26 @@
 header('Content-type: text/html; charset=utf-8');
 
 session_start();
-/*if (!isset($_SESSION['count'])) {
-  $_SESSION['count'] = 0;
-} else {
-  $_SESSION['count']++;
-}*/
-
 $_SESSION['filtr_tovar'] = $_POST["find_tovar"];
 $_SESSION['filtr_order'] = $_POST["find_order"];
 $_SESSION['filtr_begin_date'] = $_POST["begin_date"];
 $_SESSION['filtr_end_date'] = $_POST["end_date"];
 
-/*if (!empty($_POST["filter"]) and (isset($_POST['find_tovar']) or isset($_POST['find_order']) or isset($_POST['begin_date']) or isset($_POST['end_date']))) {
-	//echo $_POST["find_tovar"] . "</br>";
-	//echo SetCookie("filtr_tovar",$_POST["find_tovar"]) . "</br>";
-	//SetCookie("Test","Value");
-	//echo "Begin cookie";
-	$cook_1 = SetCookie("filtr_tovar",$_POST["find_tovar"]);
-	$cook_2 = SetCookie("filtr_order",$_POST["find_order"]);
-	$cook_3 = SetCookie("filtr_begin_date",$_POST["begin_date"]);
-	$cook_4 = SetCookie("filtr_end_date",$_POST["end_date"]);
-	
-	if ($cook_1) {
-        $filtr_tovar = htmlspecialchars($_COOKIE["filtr_tovar"]);
-        echo "<h3>Cookies успешно установлены! - " . $filtr_tovar . "</h3>";
-    }
-	if ($cook_2) {
-        $filtr_order = htmlspecialchars($_COOKIE["filtr_order"]);
-        echo "<h3>Cookies успешно установлены! - " . $filtr_order . "</h3>";
-    }
-	if ($cook_3) {
-        $filtr_begin_date = htmlspecialchars($_COOKIE["filtr_begin_date"]);
-        echo "<h3>Cookies успешно установлены! - " . $filtr_begin_date . "</h3>";
-    }
-	if ($cook_4) {
-        $filtr_end_date = htmlspecialchars($_COOKIE["filtr_end_date"]);
-        echo "<h3>Cookies успешно установлены! - " . $filtr_end_date . "</h3>";
-    }
-	//echo "куки записан";
-}*/
+if (!empty($_POST["refresh_status"])) load_status($_POST['id_order']);
+if (!empty($_POST["filtr_by_order"])) $_SESSION['filtr_order'] = $_POST['id_order'];
 
 $filtr_tovar = htmlspecialchars($_SESSION['filtr_tovar']);
+$filtr_order = htmlspecialchars($_SESSION['filtr_order']);
+$filtr_begin_date = htmlspecialchars($_SESSION['filtr_begin_date']);
+$filtr_end_date = htmlspecialchars($_SESSION['filtr_end_date']);
 echo <<<_END
 <form name="form" action="" method="post">
     <table>
         <tr>
-            <td>Заказ   <input type="text" name="find_order"  /></td>
-            <td>Нач дата<input type="text" name="begin_date" /></td>
-            <td>Кон дата<input type="text" name="end_date" /></td>
-            <td>Товар   <input type="text" name="find_tovar" value=$filtr_tovar></td>
+            <td>Заказ   <input type="text" name="find_order" value = $filtr_order></td>
+            <td>Нач дата (ДД.ММ.ГГГГ)<input type="text" name="begin_date" value = $filtr_begin_date></td>
+            <td>Кон дата (ДД.ММ.ГГГГ)<input type="text" name="end_date" value = $filtr_end_date></td>
+            <td>Товар   <input type="text" name="find_tovar" value = $filtr_tovar></td>
             <td colspan="2">
                 <input type="submit" name="filter" value="Фильтр" />
             </td>
@@ -64,10 +35,6 @@ _END;
 
 <?php
 
-
-if (!empty($_POST["refresh_status"])) load_status($_POST['id_order']);
-
-
 function addWhere($where, $add, $and = true) {
     if ($where) {
         if ($and) $where .= " AND $add";
@@ -76,22 +43,43 @@ function addWhere($where, $add, $and = true) {
     else $where = $add;
     return $where;
 }
-if (!empty($_POST["filter"])) {
+if (!empty($_POST["filter"]) or !empty($_POST["filtr_by_order"]) or !empty($_POST["u_count"])) {
     $where = "";
     if ($_POST["begin_date"]) $where = addWhere($where, "`date_order` >= '".htmlspecialchars(strtotime($_POST["begin_date"])))."'";
-    if ($_POST["end_date"]) $where = addWhere($where, "`date_order` <= '".htmlspecialchars(strtotime($_POST["end_date"])))."'";
+    if ($_POST["end_date"]) $where = addWhere($where, "`date_order` <= '".htmlspecialchars(strtotime($_POST["end_date"] . '23:59:59')))."'";
     //if ($_POST["manufacturers"]) $where = addWhere($where, "`manufacturer` IN (".htmlspecialchars(implode(",", $_POST["manufacturers"])).")");
     //if ($_POST["find_order"]) $where = addWhere($where, "`wifi` = '1'");
-    if ($_POST["find_order"]) $where = addWhere($where, "`namber_order` = '" . htmlspecialchars($_POST["find_order"])) . "'";
+	/*if (!empty($_POST["find_order"])) {
+			//$res = $_POST["find_order"];
+			$where = addWhere($where, "`namber_order` = '" . htmlspecialchars($_POST["find_order"]) . "'");
+		}
+		elseif (!empty($_POST["id_order"])) {
+			//$res = $_POST["id_order"];
+			$where = addWhere($where, "`namber_order` = '" . htmlspecialchars($_POST["id_order"]) . "'");
+			}
+		echo $filtr_order;*/
+		
+	//if ($_POST["find_order"]) $where = addWhere($where, "`namber_order` = '" . htmlspecialchars($filtr_order) . "'");
+	if (!empty($filtr_order)) $where = addWhere($where, "`namber_order` = '" . htmlspecialchars($filtr_order) . "'");
     if ($_POST["find_tovar"]) $where = addWhere($where, "`name` like '%" . htmlspecialchars($_POST["find_tovar"])) . "%'";
     $sql  = "SELECT `tbl_order`.`namber_order`,`tbl_order`.`date_order`, `tbl_tovar_order`.* , `tbl_order`.`status` FROM tbl_tovar_order INNER JOIN `tbl_order` ON `tbl_tovar_order`.`id_order` = `tbl_order`.`namber_order`";
-    if ($where) $sql .= " WHERE $where";
+    if ($where) {
+			$sql .= " WHERE $where and `status_otmeni` !=" . "'<span>Order Cancelled</span>'";
+			}
+		else { 
+			$sql .= " WHERE `status_otmeni` !=" . "'<span>Order Cancelled</span>'";
+			}
     $sql .= " ORDER BY `namber_order` DESC";
-	//echo $sql;
+	echo $sql;
 }
 else
 {
-    if ($filtr_tovar != '') $where_cookie=" WHERE `name` like '%" . $filtr_tovar . "%'";
+    if ($filtr_tovar != '') {
+			$where_cookie = " WHERE `name` like '%" . $filtr_tovar . "%' and `status_otmeni` !=" . "'<span>Order Cancelled</span>'";
+		}
+		else {
+			$where_cookie = " WHERE `status_otmeni` !=" . "'<span>Order Cancelled</span>'";
+		}
     //echo $where_cookie . "</br>";
     $sql  = "SELECT `tbl_order`.`namber_order`,`tbl_order`.`date_order`, `tbl_tovar_order`.* , `tbl_order`.`status` FROM tbl_tovar_order INNER JOIN `tbl_order` ON `tbl_tovar_order`.`id_order` = `tbl_order`.`namber_order`". $where_cookie . " ORDER BY `namber_order` DESC";
 	//echo "2 " . $sql;
@@ -133,9 +121,6 @@ if (isset($_POST['u_count']) && isset($_POST['id_tovar_order']))
 $result = mysql_query($sql);
 $rows = mysql_num_rows($result);
 
-?>
-
-<?php
 echo "<table border=\"1\"> <tr><td>№ Заказа</td><td>Дата заказа</td><td>Фото</td><td>Товар</td><td>Контакт</td><td>Сумма заказа,у.е.</td><td>Количество партий</td><td>Количество шт</td><td>Цена за ед., у.е.</td><td>Статус заказа</td><td>Статус отмены</td><td>Снимок заказа</td></tr>";
 
 for ($j = 0 ; $j < $rows ; ++$j)
@@ -143,9 +128,14 @@ for ($j = 0 ; $j < $rows ; ++$j)
     $row = mysql_fetch_assoc($result);
     echo "<tr>";
         echo  <<<_END
-        <td><a href="http://trade.aliexpress.com/order_detail.htm?orderId=$row[namber_order]" target="_blank" data-spm-anchor-id="0.0.0.0">$row[namber_order]</a></td>
+        <td><a href="http://trade.aliexpress.com/order_detail.htm?orderId=$row[namber_order]" target="_blank" data-spm-anchor-id="0.0.0.0">$row[namber_order]</a>
+		<form name="cmd_filtr_order" action="" method="post">
+            <input type="hidden" name="id_tovar_order" value=$row[id_tovar_order]>
+            <input type="hidden" name="id_order" value=$row[namber_order]>
+            <input type="submit" name="filtr_by_order" value="Фильтр">
+        </form></td>
 _END;
-        echo "<td>" . date("Y-m-d", $row[date_order]) . "</td>";
+        echo "<td>" . date("d-m-Y", $row[date_order]) . "</td>";
         echo "<td><img src=\"image.php?id=" . $row[id_tovar_order] . "\" alt=\"\" /></td>";
         echo "<td>$row[name]</td>";
         echo "<td>$row[manager]</td>";
@@ -175,10 +165,14 @@ _END;
 }
 echo "</table>";
 
+
+
 function get_post($var)
 {
     return mysql_real_escape_string($_POST[$var]);
 }
+
+
 
 function load_status($namber_order)
 {
@@ -228,6 +222,9 @@ function get_web_page($url)
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 120); // таймаут соединения
     curl_setopt($ch, CURLOPT_TIMEOUT, 120);        // таймаут ответа
     curl_setopt($ch, CURLOPT_MAXREDIRS, 10);       // останавливаться после 10-ого редиректа
+	//curl_setopt($ch, CURLOPT_CAINFO, "./cacert.pem");
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+	curl_setopt($ch, CURLOPT_COOKIEFILE,$_SERVER[DOCUMENT_ROOT]."/cookies.txt");
 
     $content = curl_exec( $ch );
     $err     = curl_errno( $ch );
