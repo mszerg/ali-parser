@@ -126,7 +126,7 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
                     $int_order = $order->find('.order-num', 0)->plaintext . "</td>";
                     $tmp_date = mb_substr($order->find('.deal-time', 0)->plaintext, 26, 18);
                     $dt_date = strtotime($tmp_date); // переводит из строки в дату
-                    $txt_contacts = $order->find('.feedback', 0)->outertext;
+                    //$txt_contacts = $order->find('.feedback', 0)->outertext;
                     $dec_summa = $order->find('.amount strong', 0)->plaintext;
                     $dec_summa = mb_substr($dec_summa, 2, mb_strlen($dec_summa) - 2);
 

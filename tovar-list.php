@@ -1,19 +1,31 @@
 <?php
 header('Content-type: text/html; charset=utf-8');
+//подгружаем библиотеку
+require_once 'library/simple_html_dom.php';
 
+///////////////////////////////////////////Запоминаем данные в сессию
 session_start();
 $_SESSION['filtr_tovar'] = $_POST["find_tovar"];
-$_SESSION['filtr_order'] = $_POST["find_order"];
+//if (empty($_POST["refresh_count"])) $_SESSION['filtr_order'] = fOrder($_POST["find_order"],$_POST["id_order"]);
+if (empty($_POST["refresh_count"])) $_SESSION['filtr_order'] = $_POST["find_order"];
 $_SESSION['filtr_begin_date'] = $_POST["begin_date"];
 $_SESSION['filtr_end_date'] = $_POST["end_date"];
 
-if (!empty($_POST["refresh_status"])) load_status($_POST['id_order']);
-if (!empty($_POST["filtr_by_order"])) $_SESSION['filtr_order'] = $_POST['id_order'];
+/////////////////////////////////////////// Обнуляем сессию если нажата кнопка Удалить фильтр
+if (!empty($_POST["delfilter"])) {
+$_SESSION['filtr_tovar'] = "";
+$_SESSION['filtr_order'] = "";
+$_SESSION['filtr_begin_date'] = "";
+$_SESSION['filtr_end_date'] = "";
+}
 
+//////////////////////////////////////////Присваиваем перемменным значения сессии
 $filtr_tovar = htmlspecialchars($_SESSION['filtr_tovar']);
 $filtr_order = htmlspecialchars($_SESSION['filtr_order']);
 $filtr_begin_date = htmlspecialchars($_SESSION['filtr_begin_date']);
 $filtr_end_date = htmlspecialchars($_SESSION['filtr_end_date']);
+
+/////////////////////////////////////////// Форма фильтра
 echo <<<_END
 <form name="form" action="" method="post">
     <table>
@@ -24,6 +36,7 @@ echo <<<_END
             <td>Товар   <input type="text" name="find_tovar" value = $filtr_tovar></td>
             <td colspan="2">
                 <input type="submit" name="filter" value="Фильтр" />
+				<input type="submit" name="delfilter" value="Удалить Фильтр" />
             </td>
         </tr>
     </table>
@@ -31,10 +44,33 @@ echo <<<_END
 _END;
 
 
-?>
+///////////////////////////////// BEGIN Podkluchaem BD //////////////////////////////
+require_once 'login.php';
+$db_server = mysql_connect($db_hostname, $db_username, $db_password);
 
-<?php
+if (!$db_server) die("Unable to connect to MySQL: " . mysql_error());
 
+mysql_select_db($db_database, $db_server)
+or die("Unable to select database: " . mysql_error());
+
+mysql_query("SET NAMES utf8");
+
+///////////////////////////////////// Отрабатывем кнопку обновить статус
+if (!empty($_POST["refresh_status"])) load_status($_POST['find_order'],$db_server);
+
+////////////////////////////////////// Отрабатывваем кнопку Об-ть кол-во
+if (isset($_POST['u_count']) && isset($_POST['id_tovar_order']))
+{
+    $id_tovar_order = get_post('id_tovar_order');
+    $u_count = get_post('u_count');
+    $query = "UPDATE tbl_tovar_order SET count='$u_count' WHERE id_tovar_order='$id_tovar_order'";
+    //echo $query;
+    if (!mysql_query($query, $db_server))
+        echo "Update failed: $query<br>" .
+            mysql_error() . "<br><br>";
+}
+
+///////////////////////////////////// Функциия для условия where в запросе на выборку
 function addWhere($where, $add, $and = true) {
     if ($where) {
         if ($and) $where .= " AND $add";
@@ -43,7 +79,7 @@ function addWhere($where, $add, $and = true) {
     else $where = $add;
     return $where;
 }
-if (!empty($_POST["filter"]) or !empty($_POST["filtr_by_order"]) or !empty($_POST["u_count"])) {
+if (!empty($_POST["filter"]) or !empty($_POST["filtr_by_order"]) or !empty($_POST["u_count"]) or !empty($_POST["refresh_status"])) {
     $where = "";
     if ($_POST["begin_date"]) $where = addWhere($where, "`date_order` >= '".htmlspecialchars(strtotime($_POST["begin_date"])))."'";
     if ($_POST["end_date"]) $where = addWhere($where, "`date_order` <= '".htmlspecialchars(strtotime($_POST["end_date"] . '23:59:59')))."'";
@@ -62,7 +98,7 @@ if (!empty($_POST["filter"]) or !empty($_POST["filtr_by_order"]) or !empty($_POS
 	//if ($_POST["find_order"]) $where = addWhere($where, "`namber_order` = '" . htmlspecialchars($filtr_order) . "'");
 	if (!empty($filtr_order)) $where = addWhere($where, "`namber_order` = '" . htmlspecialchars($filtr_order) . "'");
     if ($_POST["find_tovar"]) $where = addWhere($where, "`name` like '%" . htmlspecialchars($_POST["find_tovar"])) . "%'";
-    $sql  = "SELECT `tbl_order`.`namber_order`,`tbl_order`.`date_order`, `tbl_tovar_order`.* , `tbl_order`.`status` FROM tbl_tovar_order INNER JOIN `tbl_order` ON `tbl_tovar_order`.`id_order` = `tbl_order`.`namber_order`";
+    $sql  = "SELECT `tbl_order`.*, `tbl_tovar_order`.* FROM tbl_tovar_order INNER JOIN `tbl_order` ON `tbl_tovar_order`.`id_order` = `tbl_order`.`namber_order`";
     if ($where) {
 			$sql .= " WHERE $where and `status_otmeni` !=" . "'<span>Order Cancelled</span>'";
 			}
@@ -70,7 +106,7 @@ if (!empty($_POST["filter"]) or !empty($_POST["filtr_by_order"]) or !empty($_POS
 			$sql .= " WHERE `status_otmeni` !=" . "'<span>Order Cancelled</span>'";
 			}
     $sql .= " ORDER BY `namber_order` DESC";
-	echo $sql;
+	//echo $sql;
 }
 else
 {
@@ -81,43 +117,11 @@ else
 			$where_cookie = " WHERE `status_otmeni` !=" . "'<span>Order Cancelled</span>'";
 		}
     //echo $where_cookie . "</br>";
-    $sql  = "SELECT `tbl_order`.`namber_order`,`tbl_order`.`date_order`, `tbl_tovar_order`.* , `tbl_order`.`status` FROM tbl_tovar_order INNER JOIN `tbl_order` ON `tbl_tovar_order`.`id_order` = `tbl_order`.`namber_order`". $where_cookie . " ORDER BY `namber_order` DESC";
+    $sql  = "SELECT `tbl_order`.*, `tbl_tovar_order`.*  FROM tbl_tovar_order INNER JOIN `tbl_order` ON `tbl_tovar_order`.`id_order` = `tbl_order`.`namber_order`". $where_cookie . " ORDER BY `namber_order` DESC";
 	//echo "2 " . $sql;
 }
-?>
 
-<?php
-//header('Content-type: text/html; charset=utf-8');
-
-///////////////////////////////// BEGIN Podkluchaem BD //////////////////////////////
-require_once 'login.php';
-$db_server = mysql_connect($db_hostname, $db_username, $db_password);
-
-if (!$db_server) die("Unable to connect to MySQL: " . mysql_error());
-
-mysql_select_db($db_database, $db_server)
-or die("Unable to select database: " . mysql_error());
-
-mysql_query("SET NAMES utf8");
-
-//$query  = "SELECT `tbl_order`.`namber_order`,`tbl_order`.`date_order`, `tbl_tovar_order`.* FROM tbl_tovar_order INNER JOIN `db_parser`.`tbl_order` ON `tbl_tovar_order`.`id_order` = `tbl_order`.`namber_order`";
-//addWhere("","");
-//echo "1 - " . $sql;
-
-
-//if (!$result) die ("Database access failed: " . mysql_error());
-
-if (isset($_POST['u_count']) && isset($_POST['id_tovar_order']))
-{
-    $id_tovar_order = get_post('id_tovar_order');
-    $u_count = get_post('u_count');
-    $query = "UPDATE tbl_tovar_order SET count='$u_count' WHERE id_tovar_order='$id_tovar_order'";
-    //echo $query;
-    if (!mysql_query($query, $db_server))
-        echo "Update failed: $query<br>" .
-            mysql_error() . "<br><br>";
-}
-
+//////////////////////////////////// Отрисовывем главную таблицу
 $result = mysql_query($sql);
 $rows = mysql_num_rows($result);
 
@@ -131,14 +135,15 @@ for ($j = 0 ; $j < $rows ; ++$j)
         <td><a href="http://trade.aliexpress.com/order_detail.htm?orderId=$row[namber_order]" target="_blank" data-spm-anchor-id="0.0.0.0">$row[namber_order]</a>
 		<form name="cmd_filtr_order" action="" method="post">
             <input type="hidden" name="id_tovar_order" value=$row[id_tovar_order]>
-            <input type="hidden" name="id_order" value=$row[namber_order]>
+            <input type="hidden" name="find_order" value=$row[namber_order]>
             <input type="submit" name="filtr_by_order" value="Фильтр">
-        </form></td>
+        </form>
+		$row[tracknumber]</td>
 _END;
-        echo "<td>" . date("d-m-Y", $row[date_order]) . "</td>";
+        echo "<td>" . date("d.m.Y", $row[date_order]) . "</td>";
         echo "<td><img src=\"image.php?id=" . $row[id_tovar_order] . "\" alt=\"\" /></td>";
         echo "<td>$row[name]</td>";
-        echo "<td>$row[manager]</td>";
+        echo "<td>$row[contacts]</td>";
         echo "<td>$row[price]</td>";
         echo "<td>$row[count_partiy]</td>";
         //echo "<td>$row[9]</td>";
@@ -146,7 +151,7 @@ _END;
         <form name="update_count" action="" method="post">
             <td><input type="hidden" name="id_tovar_order" value=$row[id_tovar_order]>
             <input type="text" name="u_count" value="$row[count]">
-            <input type="submit" value="Об-ть кол-во"></td>
+            <input type="submit" name="refresh_count" value="Об-ть кол-во"></td>
         </form>
 _END;
         echo "<td>" . number_format($row[price]*$row[count_partiy]/$row[count], 2, '.', ' ') . "</td>";
@@ -154,7 +159,7 @@ _END;
         echo <<<_END
         <form name="update_status" action="" method="post">
             <input type="hidden" name="id_tovar_order" value=$row[id_tovar_order]>
-            <input type="hidden" name="id_order" value=$row[namber_order]>
+            <input type="hidden" name="find_order" value=$row[namber_order]>
             <input type="submit" name="refresh_status" value="Об-ть статус"></td>
         </form>
 _END;
@@ -174,13 +179,13 @@ function get_post($var)
 
 
 
-function load_status($namber_order)
+function load_status($namber_order,$db_server)
 {
     echo "load status - " . $namber_order;
     echo  <<<_END
         <a href="http://trade.aliexpress.com/order_detail.htm?orderId=$namber_order" target="_blank" data-spm-anchor-id="0.0.0.0">$namber_order</a>
 _END;
-    $result = get_web_page("http://trade.aliexpress.com/order_detail.htm?orderId=64091038801401");
+    $result = get_web_page("http://trade.aliexpress.com/order_detail.htm?orderId=$namber_order");
     echo $result['errno'];
     if (($result['errno'] != 0 )||($result['http_code'] != 200))
     {
@@ -190,21 +195,34 @@ _END;
     {
         $page = $result['content'];
         echo "Загружаю страницу";
-        echo $page;
-    }
-
-    /*require_once 'library/simple_html_dom.php';
-    $html = new simple_html_dom();
-    //$html = file_get_html("http://trade.aliexpress.com/order_detail.htm?orderId=" . $namber_order);
-    $html = file_get_html("http://trade.aliexpress.com/order_detail.htm?orderId=64091038801401");
-    echo $html->innertext;
-    $txt_status = $html->find('.order-status', 0)->outertext;
-    $txt_status_otmeni = $html->find('.trade-status', 0)->outertext;
-    echo $txt_status . " -st1</br>";
-    echo $txt_status_otmeni . " -st2</br>";
-
-    $html->clear();
-    unset($html);*/
+        //echo $page;
+		$html = new simple_html_dom();
+		$html = str_get_html($page);
+		$str_status = $html->find('.order-status', 0)->plaintext;
+		$str_magazine= $html->find('.user-name-text', 0)->outertext;
+		$str_tracknumber= $html->find('td[class=no]', 0)->plaintext;
+		
+		$query = "UPDATE tbl_order SET status='$str_status', contacts='$str_magazine', tracknumber='$str_tracknumber' WHERE namber_order=$namber_order";
+		echo $query;
+		if (!mysql_query($query, $db_server))
+			echo "Update failed: $query<br>" . mysql_error() . "<br><br>";
+		
+		$html = $html->find('.product-table',0);
+		//echo $html;
+		foreach ($html->find('.order-bd') as $product) {
+				$str_status_otmeni = $product->find('.trade-status', 0)->plaintext;
+			    $txt_snapshot = $product->find('.desc a', 0)->outertext;
+                $str_begin = mb_strpos($txt_snapshot,'snapshot')+9;
+                $str_end = mb_strpos($txt_snapshot,'.html');
+                $txt_snapshot_num = mb_substr($txt_snapshot,$str_begin,$str_end-$str_begin);
+				//echo $txt_snapshot_num;
+					
+				$query = "UPDATE tbl_tovar_order SET status_otmeni='$str_status_otmeni' WHERE snapshot_num=$txt_snapshot_num";
+				//echo $query;
+				if (!mysql_query($query, $db_server))
+					echo "Update failed: $query<br>" . mysql_error() . "<br><br>";
+		}
+	}
 }
 
 
@@ -237,5 +255,16 @@ function get_web_page($url)
     $header['content'] = $content;
     return $header;
 }
+
+/*function fOrder ($find_order,$id_order) 
+{
+if (!empty($find_order)):
+		return $find_order;
+	elseif (!empty($id_order)):
+		return $id_order;
+	else:
+		return null;
+endif;
+}*/
 
 ?>
