@@ -9,7 +9,8 @@ header('Content-type: text/html; charset=utf-8');
             <td>№ нач страницы<input type="text" name="stranica_begin" value="12"/></td>
             <td>№ кон страницы<input type="text" name="stranica_end" value="14"/></td>
             <td colspan="2">
-                <input type="submit" value="Загрузить" />
+                <input type="submit" name="cmdLoadFromSave" value="Загрузить" />
+				<input type="submit" name="cmdLoadFromBrowser" value="Загрузить с браузера" />
             </td>
         </tr>
     </table>
@@ -62,45 +63,77 @@ if (!mysql_query($query, $db_server))
 if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POST['stranica_end'])) {
     $stranica_begin = get_post('stranica_begin');
     $stranica_end = get_post('stranica_end');
+	if (!empty($_POST["cmdLoadFromBrowser"]))
+		{
+		    $stranica_begin = 1;
+			$stranica_end = 1;
+		}
     for ($i = $stranica_begin; $i <= $stranica_end; ++$i) {
         //создаём новый объект
         //$i=1;
         //echo $i;
         $html = new simple_html_dom();
-        $html_2 = new simple_html_dom();
-//загружаем в него данные
-        $html = file_get_html('www-ali/ali_order_' . $i . '.htm');
-//находим все ссылки на странице и...
+		//загружаем в него данные
+        if (!empty($_POST["cmdLoadFromBrowser"])) 
+		{
+		    $result = get_web_page("http://trade.aliexpress.com/orderList.htm");
+			echo $result['errno'];
+			if (($result['errno'] != 0 )||($result['http_code'] != 200))
+				{
+					echo $result['errmsg'];
+				}
+				else
+				{
+				    $page = $result['content'];
+					echo "Загружаю страницу";
+					//echo $page;
+					$html = str_get_html($page);
+				}
 
-        /*foreach($html->find('a') as $element)
-               echo $element->href . '<br>'; */
-        /*
-        // Dumps the internal DOM tree back into string
-        $str = $html;
+		}
+		else
+		{
+			$html = file_get_html('www-ali/ali_order_' . $i . '.htm');
+		}
 
-        // Print it!
-        echo $html; 	*/
-
-        //echo "<div style=\"width:300px; height:300px; overflow:auto\">";
         foreach ($html->find('.ae-order') as $order) {
             $k = 1;
 
             foreach ($order->find('.order-bd') as $product) {
-                $blob_picture = str_replace('src="', 'src="www-ali/', $product->find('a img', 0)->outertext);
-                $blom_image = $blob_picture;
+				if (!empty($_POST["cmdLoadFromBrowser"]))
+				{
+					$blob_picture = $product->find('a img', 0)->outertext;
+                }
+				else
+				{
+					$blob_picture = str_replace('src="', 'src="www-ali/', $product->find('a img', 0)->outertext);
+				}
+				$blob_image = $blob_picture;
                 $blob_picture = mb_substr($blob_picture, mb_strpos($blob_picture, 'src="') + 5, mb_strlen($blob_picture));
                 $blob_picture = str_replace('" alt="">', '', $blob_picture);
-
+				//echo $blob_picture;
                 $fileName = $blob_picture;  //имя файла
-                $f = fopen($fileName, "r");   //открываем файл
+                $f = fopen($fileName, "rb");   //открываем файл
 				if (!$f) {
 					trigger_error('Не могу найти файл . $fileName');
 					exit;
 				}
-				$read = fread($f, filesize($fileName));  //считываем содержимое
+				if (!empty($_POST["cmdLoadFromBrowser"]))
+				{
+					
+					//$read = stream_get_contents($f);
+					$read = '';
+						while (!feof($f)) {
+						$read .= fread($f, 8192);
+						}
+				}
+				else
+				{
+					$read = fread($f, filesize($fileName));  //считываем содержимое
+				}
                 fclose($f);  //закрываем файл
                 $blob_picture = addslashes($read);
-
+				//echo $blob_picture;
                 $txt_name_tovar = $product->find('.desc', 0)->plaintext;
                 $txt_manager = $product->find('.seller-sign', 0)->plaintext;
                 $dec_price = $product->find('.price', 0)->outertext;
@@ -154,7 +187,7 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
                     else {
                         echo '-a запись вставлена'  . "</br>";
                         $query = "INSERT INTO tbl_order VALUES" .
-                            "('', '$int_order', '$dt_date', '$txt_contacts', '$dec_summa', '$txt_status')";
+                            "('', '$int_order', '$dt_date', '$txt_contacts', '$dec_summa', '$txt_status','')";
 
                         if (!mysql_query($query, $db_server))
                             echo "INSERT failed: $query<br>" . mysql_error() . "<br><br>";
@@ -166,7 +199,7 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
 
                 echo "<tr><td></td><td></td>";
                 //header("Content-Type: image/jpg");  //указываем браузеру что это изображение
-                echo "<td>" . $blom_image . "</td>";
+                echo "<td>" . $blob_image . "</td>";
                 echo "<td>" . $txt_name_tovar . "</td>";
                 echo "<td>" . $txt_manager . "</td>";
                 //echo $product->find('.sell-sp-main',0)->outertext . "</td>";
@@ -177,20 +210,6 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
                 echo "<td>" . $txt_snapshot . "</td>";
                 echo "<td>" . $txt_snapshot_num . "</td></tr>";
 
-                //echo $product->outertext . '<br>';
-                /*$pr = $product->find('.desc a',0)->href;
-                echo $pr . '<br>';
-                $var = shell_exec("curl -L -o D:\temp.html" . $pr);
-                $html_2 = file_get_html('D:\temp.html');
-                echo $html_2->find('.company-name',0)->outertext . '<br>';*/
-
-                /*foreach($html_2->find('a') as $a)
-                {
-                    echo $a;
-                }*/
-                //echo $html_2;
-
-
                 $query = "SELECT * FROM tbl_tovar_order WHERE snapshot_num='" . $txt_snapshot_num . "'";
                 //$query = "SELECT * FROM tbl_tovar_order";
                 //echo $query;
@@ -198,7 +217,7 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
                 $rows = mysql_num_rows($result);
                 //echo " - " . $rows;
                 if ($rows == 1) { //zapis uge est', update him
-                    echo 'fiest'  . "</br>";
+                    //echo 'Обновление статуса существующей записи товара'  . "</br>";
                     $query = "UPDATE tbl_tovar_order SET status_otmeni='$txt_status_otmeni' WHERE snapshot='$txt_snapshot_num'";
 
                     if (!mysql_query($query, $db_server))
@@ -212,17 +231,17 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
                     if (!mysql_query($query, $db_server))
                         echo "INSERT failed: $query<br>" . mysql_error() . "<br><br>";
                 }
+				//break;
             }
             //break;
         }
+		
         //echo "</div>";
 
 
 //освобождаем ресурсы
         $html->clear();
         unset($html);
-        $html_2->clear();
-        unset($html_2);
     } //end for
 } //end if
 
@@ -231,5 +250,34 @@ function get_post($var)
     return mysql_real_escape_string($_POST[$var]);
 }
 
-?>
+function get_web_page($url)
+{
+    $uagent = "Opera/9.80 (Windows NT 6.1; WOW64) Presto/2.12.388 Version/12.14";
 
+    $ch = curl_init( $url );
+
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);   // возвращает веб-страницу
+    curl_setopt($ch, CURLOPT_HEADER, 0);           // не возвращает заголовки
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);   // переходит по редиректам
+    curl_setopt($ch, CURLOPT_ENCODING, "");        // обрабатывает все кодировки
+    curl_setopt($ch, CURLOPT_USERAGENT, $uagent);  // useragent
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 120); // таймаут соединения
+    curl_setopt($ch, CURLOPT_TIMEOUT, 120);        // таймаут ответа
+    curl_setopt($ch, CURLOPT_MAXREDIRS, 10);       // останавливаться после 10-ого редиректа
+	//curl_setopt($ch, CURLOPT_CAINFO, "./cacert.pem");
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+	curl_setopt($ch, CURLOPT_COOKIEFILE,$_SERVER[DOCUMENT_ROOT]."/cookies.txt");
+
+    $content = curl_exec( $ch );
+    $err     = curl_errno( $ch );
+    $errmsg  = curl_error( $ch );
+    $header  = curl_getinfo( $ch );
+    curl_close( $ch );
+
+    $header['errno']   = $err;
+    $header['errmsg']  = $errmsg;
+    $header['content'] = $content;
+    return $header;
+}
+
+?>
