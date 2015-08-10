@@ -96,28 +96,28 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
 			$html = file_get_html('www-ali/ali_order_' . $i . '.htm');
 		}
 
-        foreach ($html->find('.ae-order') as $order) {
+        foreach ($html->find('.order-item-wraper ') as $order) {
             $k = 1;
 
             foreach ($order->find('.order-bd') as $product) {
 				if (!empty($_POST["cmdLoadFromBrowser"]))
-				{
-					$blob_picture = $product->find('a img', 0)->outertext;
-                }
+					{
+						$blob_picture = $product->find('a img', 0)->outertext;
+					}
 				else
-				{
-					$blob_picture = str_replace('src="', 'src="www-ali/', $product->find('a img', 0)->outertext);
-				}
-				$blob_image = $blob_picture;
-                $blob_picture = mb_substr($blob_picture, mb_strpos($blob_picture, 'src="') + 5, mb_strlen($blob_picture));
-                $blob_picture = str_replace('" alt="">', '', $blob_picture);
-				//echo $blob_picture;
-                $fileName = $blob_picture;  //имя файла
-                $f = fopen($fileName, "rb");   //открываем файл
-				if (!$f) {
-					trigger_error('Не могу найти файл . $fileName');
-					exit;
-				}
+					{
+						$blob_picture = str_replace('src="', 'src="www-ali/', $product->find('a img', 0)->outertext);
+					}
+					$blob_image = $blob_picture;
+					$blob_picture = mb_substr($blob_picture, mb_strpos($blob_picture, 'src="') + 5, mb_strlen($blob_picture));
+					$blob_picture = str_replace('" alt="">', '', $blob_picture);
+					//echo $blob_picture;
+					$fileName = $blob_picture;  //имя файла
+					$f = fopen($fileName, "rb");   //открываем файл
+					if (!$f) {
+						trigger_error('Не могу найти файл . $fileName');
+						exit;
+					}
 				if (!empty($_POST["cmdLoadFromBrowser"]))
 				{
 					
@@ -134,8 +134,9 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
                 fclose($f);  //закрываем файл
                 $blob_picture = addslashes($read);
 				//echo $blob_picture;
-                $txt_name_tovar = $product->find('.desc', 0)->plaintext;
-                $txt_manager = $product->find('.seller-sign', 0)->plaintext;
+				
+                $txt_name_tovar = $product->find('.product-title', 0)->plaintext;
+                //$txt_manager = $product->find('.seller-sign', 0)->plaintext;
                 $dec_price = $product->find('.price', 0)->outertext;
                 $dec_price = mb_substr($dec_price, mb_strpos($dec_price, '$') + 2, mb_strlen($dec_price) - 2);
                 $int_count = $product->find('.quantity', 0)->plaintext;
