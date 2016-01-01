@@ -6,8 +6,8 @@ header('Content-type: text/html; charset=utf-8');
     <input type="hidden" name="zagruzka" value="yes">
     <table>
         <tr>
-            <td>№ нач страницы<input type="text" name="stranica_begin" value="12"/></td>
-            <td>№ кон страницы<input type="text" name="stranica_end" value="14"/></td>
+            <td>№ нач страницы<input type="text" name="stranica_begin" value="17"/></td>
+            <td>№ кон страницы<input type="text" name="stranica_end" value="17"/></td>
             <td colspan="2">
                 <input type="submit" name="cmdLoadFromSave" value="Загрузить" />
 				<input type="submit" name="cmdLoadFromBrowser" value="Загрузить с браузера" />
@@ -94,17 +94,20 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
 		else
 		{
 			$html = file_get_html('www-ali/ali_order_' . $i . '.htm');
+			//echo $html;
 		}
 
         foreach ($html->find('.order-item-wraper ') as $order) {
             $k = 1;
 
-            foreach ($order->find('.order-bd') as $product) {
+            foreach ($order->find('.order-body') as $product) {
+				///////////////////////////////////////////// Начало - Загружаем картинку товара /////////////////////////////////
 				if (!empty($_POST["cmdLoadFromBrowser"]))
 					{
 						$blob_picture = $product->find('a img', 0)->outertext;
 					}
 				else
+					//echo 'Загружаем картинку локально';
 					{
 						$blob_picture = str_replace('src="', 'src="www-ali/', $product->find('a img', 0)->outertext);
 					}
@@ -133,20 +136,24 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
 				}
                 fclose($f);  //закрываем файл
                 $blob_picture = addslashes($read);
-				//echo $blob_picture;
-				
-                $txt_name_tovar = $product->find('.product-title', 0)->plaintext;
+				////////////////////////////////////////// Конец - Загружаем картинку товара /////////////////////////////////
+								
+                $txt_name_tovar = $product->find('.product-title', 0)->plaintext; //+
                 //$txt_manager = $product->find('.seller-sign', 0)->plaintext;
-                $dec_price = $product->find('.price', 0)->outertext;
-                $dec_price = mb_substr($dec_price, mb_strpos($dec_price, '$') + 2, mb_strlen($dec_price) - 2);
-                $int_count = $product->find('.quantity', 0)->plaintext;
-                $txt_status = $product->find('.f-left', 0)->outertext;
-                $txt_status_otmeni = $product->find('.after-service span', 0)->outertext;
-                $txt_snapshot = $product->find('.desc a', 0)->outertext;
-                $str_begin = mb_strpos($txt_snapshot,'snapshot')+9;
+                $dec_price = $product->find('.product-amount span', 0)->outertext;
+                $dec_price = mb_substr($dec_price, mb_strpos($dec_price, '$') + 2, mb_strlen($dec_price) - 2); //+
+                $int_count = $product->find('.product-amount', 0)->plaintext;
+				$int_count = mb_substr($int_count, mb_strpos($int_count, 'X')+1, mb_strlen($dec_price)); //+
+                $txt_status = $product->find('.f-left', 0)->outertext; //+
+                $txt_status_otmeni = $product->find('.product-action span', 0)->outertext; //?
+                $txt_snapshot = $product->find('.product-snapshot', 0)->outertext;
+				//var_dump($txt_snapshot);
+				
+                $str_begin = mb_strpos($txt_snapshot,'/snapshot')+10;
                 $str_end = mb_strpos($txt_snapshot,'.html');
                 $txt_snapshot_num = mb_substr($txt_snapshot,$str_begin,$str_end-$str_begin);
-                $txt_snapshot = str_replace(trim($txt_name_tovar), 'Снимок заказа', $txt_snapshot);
+				//$txt_snapshot_num  = $product->find('.product-snapshot', 0)->href;
+                //$txt_snapshot = str_replace(trim($txt_name_tovar), 'Снимок заказа', $txt_snapshot);
 
                 if (mb_strlen($product->find('.order-list-mobile-orders', 0)->plaintext) != 0) {
                     $bl_mobile = 1;
@@ -157,12 +164,11 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
 
                 if ($k == 1) {
 
-                    $int_order = $order->find('.order-num', 0)->plaintext . "</td>";
-                    $tmp_date = mb_substr($order->find('.deal-time', 0)->plaintext, 26, 18);
-                    $dt_date = strtotime($tmp_date); // переводит из строки в дату
+                    $int_order = $order->find('.info-body', 0)->plaintext . "</td>"; //+
+					$dt_date=strtotime($order->find('.second-row .info-body', 0)->plaintext);
                     //$txt_contacts = $order->find('.feedback', 0)->outertext;
-                    $dec_summa = $order->find('.amount strong', 0)->plaintext;
-                    $dec_summa = mb_substr($dec_summa, 2, mb_strlen($dec_summa) - 2);
+                    $dec_summa = $order->find('.amount-num', 0)->plaintext;
+                    $dec_summa = mb_substr($dec_summa, mb_strpos($dec_summa, '$') + 2, mb_strlen($dec_summa) - 2);
 
                     echo "<tr><td>" . $int_order . "</td>";
                     echo "<td>" . date("Y-m-d", $dt_date) . "</td>";
@@ -219,15 +225,18 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
                 //echo " - " . $rows;
                 if ($rows == 1) { //zapis uge est', update him
                     //echo 'Обновление статуса существующей записи товара'  . "</br>";
-                    $query = "UPDATE tbl_tovar_order SET status_otmeni='$txt_status_otmeni' WHERE snapshot='$txt_snapshot_num'";
-
+					//echo $txt_status_otmeni;
+                    $query = "UPDATE tbl_tovar_order SET status_otmeni='$txt_status_otmeni' WHERE snapshot_num=$txt_snapshot_num";
+					//echo $query;
                     if (!mysql_query($query, $db_server))
                         echo "UPDATE failed: $query<br>" . mysql_error() . "<br><br>";
                 }
                 else {
                     //echo 'second'  . "</br>";
+					//echo $txt_status_otmeni;
                     $query = "INSERT INTO tbl_tovar_order VALUES" .
-                        "('', '$int_order', '$blob_picture', '$txt_name_tovar', '$txt_manager', '$dec_price', '$int_count', '$int_count', '$txt_status_otmeni', '$txt_snapshot', '$txt_snapshot_num', '$bl_mobile')";
+                        "('', '$int_order', '$blob_picture', '$txt_name_tovar', '$txt_manager', '$dec_price', '$int_count', '$int_count', 
+						'$txt_status_otmeni', '$txt_snapshot', '$txt_snapshot_num', '$bl_mobile')";
 
                     if (!mysql_query($query, $db_server))
                         echo "INSERT failed: $query<br>" . mysql_error() . "<br><br>";
