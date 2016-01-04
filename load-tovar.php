@@ -38,7 +38,7 @@ mysql_query("SET NAMES utf8");
 if (!mysql_query($query, $db_server))
     echo "DELETE failed: $query<br>" . mysql_error() . "<br><br>";*/
 
-/*$query = "DELETE FROM tbl_tovar_order";
+/*$query = "DELETE FROM tbl_order_tovar";
 
 if (!mysql_query($query, $db_server))
     echo "DELETE failed: $query<br>" . mysql_error() . "<br><br>";*/
@@ -210,22 +210,22 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
                 echo "<td>" . $txt_snapshot . "</td>";
                 echo "<td>" . $txt_snapshot_num . "</td></tr>";
 
-                $query = "SELECT * FROM tbl_tovar_order WHERE snapshot_num='" . $txt_snapshot_num . "'";
-                //$query = "SELECT * FROM tbl_tovar_order";
+                $query = "SELECT * FROM tbl_order_tovar WHERE snapshot_num='" . $txt_snapshot_num . "'";
+                //$query = "SELECT * FROM tbl_order_tovar";
                 //echo $query;
                 $result = mysql_query($query, $db_server);
                 $rows = mysql_num_rows($result);
                 //echo " - " . $rows;
                 if ($rows == 1) { //zapis uge est', update him
                     //echo 'Обновление статуса существующей записи товара'  . "</br>";
-                    $query = "UPDATE tbl_tovar_order SET status_otmeni='$txt_status_otmeni' WHERE snapshot='$txt_snapshot_num'";
+                    $query = "UPDATE tbl_order_tovar SET status_otmeni='$txt_status_otmeni' WHERE snapshot='$txt_snapshot_num'";
 
                     if (!mysql_query($query, $db_server))
                         echo "UPDATE failed: $query<br>" . mysql_error() . "<br><br>";
                 }
                 else {
                     //echo 'second'  . "</br>";
-                    $query = "INSERT INTO tbl_tovar_order VALUES" .
+                    $query = "INSERT INTO tbl_order_tovar VALUES" .
                         "('', '$int_order', '$blob_picture', '$txt_name_tovar', '$txt_manager', '$dec_price', '$int_count', '$int_count', '$txt_status_otmeni', '$txt_snapshot', '$txt_snapshot_num', '$bl_mobile')";
 
                     if (!mysql_query($query, $db_server))

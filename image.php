@@ -10,7 +10,7 @@ if ( isset( $_GET['id'] ) ) {
         or die("Unable to select database: " . mysql_error());
         mysql_query("SET NAMES utf8");
 
-        $query = "SELECT `picture` FROM `tbl_tovar_order` WHERE `id_tovar_order`=".$id;
+        $query = "SELECT `picture` FROM `tbl_order_tovar` WHERE `id_tovar_order`=".$id;
         // Выполняем запрос и получаем файл
         $res = mysql_query($query, $db_server);
         if ( mysql_num_rows( $res ) == 1 ) {

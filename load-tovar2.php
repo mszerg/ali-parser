@@ -6,6 +6,13 @@ header('Content-type: text/html; charset=utf-8');
     <input type="hidden" name="zagruzka" value="yes">
     <table>
         <tr>
+			<td>
+				<select name="aliName">
+					<option disabled>Выберите ali-логин</option>
+					<option value="1">Leonid</option>
+					<option value="2">Dmitriy</option>
+				</select>
+			</td>
             <td>№ нач страницы<input type="text" name="stranica_begin" value="17"/></td>
             <td>№ кон страницы<input type="text" name="stranica_end" value="17"/></td>
             <td colspan="2">
@@ -38,7 +45,7 @@ mysql_query("SET NAMES utf8");
 if (!mysql_query($query, $db_server))
     echo "DELETE failed: $query<br>" . mysql_error() . "<br><br>";*/
 
-/*$query = "DELETE FROM tbl_tovar_order";
+/*$query = "DELETE FROM tbl_order_tovar";
 
 if (!mysql_query($query, $db_server))
     echo "DELETE failed: $query<br>" . mysql_error() . "<br><br>";*/
@@ -58,6 +65,7 @@ if (!mysql_query($query, $db_server))
    </tr>
 <?php
 
+$int_aliName=$_POST['aliName'];
 
 
 if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POST['stranica_end'])) {
@@ -186,7 +194,7 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
                     echo " - " . $rows;
                     if ($rows == 1) { //zapis uge est', update him
                         echo '-a запись обновлена'  . "</br>";
-                        $query = "UPDATE tbl_order SET status='$txt_status' WHERE namber_order='$int_order'";
+                        $query = "UPDATE tbl_order SET id_ali='$int_aliName', status='$txt_status' WHERE namber_order='$int_order'";
 
                         if (!mysql_query($query, $db_server))
                             echo "UPDATE failed: $query<br>" . mysql_error() . "<br><br>";
@@ -194,7 +202,7 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
                     else {
                         echo '-a запись вставлена'  . "</br>";
                         $query = "INSERT INTO tbl_order VALUES" .
-                            "('', '$int_order', '$dt_date', '$txt_contacts', '$dec_summa', '$txt_status','')";
+                            "('', '$int_aliName', '$int_order', '$dt_date', '$txt_contacts', '$dec_summa', '$txt_status','')";
 
                         if (!mysql_query($query, $db_server))
                             echo "INSERT failed: $query<br>" . mysql_error() . "<br><br>";
@@ -217,8 +225,8 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
                 echo "<td>" . $txt_snapshot . "</td>";
                 echo "<td>" . $txt_snapshot_num . "</td></tr>";
 
-                $query = "SELECT * FROM tbl_tovar_order WHERE snapshot_num='" . $txt_snapshot_num . "'";
-                //$query = "SELECT * FROM tbl_tovar_order";
+                $query = "SELECT * FROM tbl_order_tovar WHERE snapshot_num='" . $txt_snapshot_num . "'";
+                //$query = "SELECT * FROM tbl_order_tovar";
                 //echo $query;
                 $result = mysql_query($query, $db_server);
                 $rows = mysql_num_rows($result);
@@ -226,7 +234,7 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
                 if ($rows == 1) { //zapis uge est', update him
                     //echo 'Обновление статуса существующей записи товара'  . "</br>";
 					//echo $txt_status_otmeni;
-                    $query = "UPDATE tbl_tovar_order SET status_otmeni='$txt_status_otmeni' WHERE snapshot_num=$txt_snapshot_num";
+                    $query = "UPDATE tbl_order_tovar SET status_otmeni='$txt_status_otmeni' WHERE snapshot_num=$txt_snapshot_num";
 					//echo $query;
                     if (!mysql_query($query, $db_server))
                         echo "UPDATE failed: $query<br>" . mysql_error() . "<br><br>";
@@ -234,7 +242,7 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
                 else {
                     //echo 'second'  . "</br>";
 					//echo $txt_status_otmeni;
-                    $query = "INSERT INTO tbl_tovar_order VALUES" .
+                    $query = "INSERT INTO tbl_order_tovar VALUES" .
                         "('', '$int_order', '$blob_picture', '$txt_name_tovar', '$txt_manager', '$dec_price', '$int_count', '$int_count', 
 						'$txt_status_otmeni', '$txt_snapshot', '$txt_snapshot_num', '$bl_mobile')";
 

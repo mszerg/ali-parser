@@ -6,7 +6,7 @@ require_once 'library/simple_html_dom.php';
 ///////////////////////////////////////////Запоминаем данные в сессию
 session_start();
 $_SESSION['filtr_tovar'] = $_POST["find_tovar"];
-//if (empty($_POST["refresh_count"])) $_SESSION['filtr_order'] = fOrder($_POST["find_order"],$_POST["id_order"]);
+//if (empty($_POST["refresh_count"])) $_SESSION['filtr_order'] = fOrder($_POST["find_order"],$_POST["namber_order"]);
 if (empty($_POST["refresh_count"])) $_SESSION['filtr_order'] = $_POST["find_order"];
 $_SESSION['filtr_begin_date'] = $_POST["begin_date"];
 $_SESSION['filtr_end_date'] = $_POST["end_date"];
@@ -63,7 +63,7 @@ if (isset($_POST['u_count']) && isset($_POST['id_tovar_order']))
 {
     $id_tovar_order = get_post('id_tovar_order');
     $u_count = get_post('u_count');
-    $query = "UPDATE tbl_tovar_order SET count='$u_count' WHERE id_tovar_order='$id_tovar_order'";
+    $query = "UPDATE tbl_order_tovar SET count='$u_count' WHERE id_tovar_order='$id_tovar_order'";
     //echo $query;
     if (!mysql_query($query, $db_server))
         echo "Update failed: $query<br>" .
@@ -87,25 +87,27 @@ if (!empty($_POST["filter"]) or !empty($_POST["filtr_by_order"]) or !empty($_POS
     //if ($_POST["find_order"]) $where = addWhere($where, "`wifi` = '1'");
 	/*if (!empty($_POST["find_order"])) {
 			//$res = $_POST["find_order"];
-			$where = addWhere($where, "`namber_order` = '" . htmlspecialchars($_POST["find_order"]) . "'");
+			$where = addWhere($where, "`tbl_order`.`namber_order` = '" . htmlspecialchars($_POST["find_order"]) . "'");
 		}
-		elseif (!empty($_POST["id_order"])) {
-			//$res = $_POST["id_order"];
-			$where = addWhere($where, "`namber_order` = '" . htmlspecialchars($_POST["id_order"]) . "'");
+		elseif (!empty($_POST["namber_order"])) {
+			//$res = $_POST["namber_order"];
+			$where = addWhere($where, "`namber_order` = '" . htmlspecialchars($_POST["namber_order"]) . "'");
 			}
 		echo $filtr_order;*/
 		
 	//if ($_POST["find_order"]) $where = addWhere($where, "`namber_order` = '" . htmlspecialchars($filtr_order) . "'");
-	if (!empty($filtr_order)) $where = addWhere($where, "`namber_order` = '" . htmlspecialchars($filtr_order) . "'");
+	if (!empty($filtr_order)) $where = addWhere($where, "`tbl_order`.`namber_order` = '" . htmlspecialchars($filtr_order) . "'");
     if ($_POST["find_tovar"]) $where = addWhere($where, "`name` like '%" . htmlspecialchars($_POST["find_tovar"])) . "%'";
-    $sql  = "SELECT `tbl_order`.*, `tbl_tovar_order`.* FROM tbl_tovar_order INNER JOIN `tbl_order` ON `tbl_tovar_order`.`id_order` = `tbl_order`.`namber_order`";
+    //$sql  = "SELECT `tbl_order`.*, `tbl_order_tovar`.* FROM tbl_order_tovar INNER JOIN `tbl_order` ON `tbl_order_tovar`.`namber_order` = `tbl_order`.`namber_order`";
+	$sql  = "SELECT tbl_order_user.*, tbl_order.*, tbl_order_tovar.*
+	FROM (tbl_order INNER JOIN tbl_order_user ON tbl_order.id_ali = tbl_order_user.id_ali) INNER JOIN tbl_order_tovar ON tbl_order.namber_order = tbl_order_tovar.namber_order";
     if ($where) {
 			$sql .= " WHERE $where and `status_otmeni` !=" . "'<span>Order Cancelled</span>'";
 			}
 		else { 
 			$sql .= " WHERE `status_otmeni` !=" . "'<span>Order Cancelled</span>'";
 			}
-    $sql .= " ORDER BY `namber_order` DESC";
+    $sql .= " ORDER BY `tbl_order`.`namber_order` DESC";
 	//echo $sql;
 }
 else
@@ -117,7 +119,9 @@ else
 			$where_cookie = " WHERE `status_otmeni` !=" . "'<span>Order Cancelled</span>'";
 		}
     //echo $where_cookie . "</br>";
-    $sql  = "SELECT `tbl_order`.*, `tbl_tovar_order`.*  FROM tbl_tovar_order INNER JOIN `tbl_order` ON `tbl_tovar_order`.`id_order` = `tbl_order`.`namber_order`". $where_cookie . " ORDER BY `namber_order` DESC";
+    //$sql  = "SELECT `tbl_order`.*, `tbl_order_tovar`.*  FROM tbl_order_tovar INNER JOIN `tbl_order` ON `tbl_order_tovar`.`namber_order` = `tbl_order`.`namber_order`". $where_cookie . " ORDER BY `tbl_order`.`namber_order` DESC";
+	$sql  = "SELECT tbl_order_user.*, tbl_order.*, tbl_order_tovar.*
+	FROM (tbl_order INNER JOIN tbl_order_user ON tbl_order.id_ali = tbl_order_user.id_ali) INNER JOIN tbl_order_tovar ON tbl_order.namber_order = tbl_order_tovar.namber_order". $where_cookie . " ORDER BY `tbl_order`.`namber_order` DESC";
 	//echo "2 " . $sql;
 }
 
@@ -125,12 +129,13 @@ else
 $result = mysql_query($sql);
 $rows = mysql_num_rows($result);
 
-echo "<table border=\"1\"> <tr><td>№ Заказа</td><td>Дата заказа</td><td>Фото</td><td>Товар</td><td>Контакт</td><td>Сумма заказа,у.е.</td><td>Количество партий</td><td>Количество шт</td><td>Цена за ед., у.е.</td><td>Статус заказа</td><td>Статус отмены</td><td>Снимок заказа</td></tr>";
+echo "<table border=\"1\"> <tr><td>ali-логин</td><td>№ Заказа</td><td>Дата заказа</td><td>Фото</td><td>Товар</td><td>Контакт</td><td>Сумма заказа,у.е.</td><td>Количество партий</td><td>Количество шт</td><td>Цена за ед., у.е.</td><td>Статус заказа</td><td>Статус отмены</td><td>Снимок заказа</td></tr>";
 
 for ($j = 0 ; $j < $rows ; ++$j)
 {
     $row = mysql_fetch_assoc($result);
     echo "<tr>";
+		echo "<td>$row[aliUserName]</td>";
         echo  <<<_END
         <td><a href="http://trade.aliexpress.com/order_detail.htm?orderId=$row[namber_order]" target="_blank" data-spm-anchor-id="0.0.0.0">$row[namber_order]</a>
 		<form name="cmd_filtr_order" action="" method="post">
@@ -217,7 +222,7 @@ _END;
                 $txt_snapshot_num = mb_substr($txt_snapshot,$str_begin,$str_end-$str_begin);
 				//echo $txt_snapshot_num;
 					
-				$query = "UPDATE tbl_tovar_order SET status_otmeni='$str_status_otmeni' WHERE snapshot_num=$txt_snapshot_num";
+				$query = "UPDATE tbl_order_tovar SET status_otmeni='$str_status_otmeni' WHERE snapshot_num=$txt_snapshot_num";
 				//echo $query;
 				if (!mysql_query($query, $db_server))
 					echo "Update failed: $query<br>" . mysql_error() . "<br><br>";
@@ -243,6 +248,8 @@ function get_web_page($url)
 	//curl_setopt($ch, CURLOPT_CAINFO, "./cacert.pem");
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 	curl_setopt($ch, CURLOPT_COOKIEFILE,$_SERVER[DOCUMENT_ROOT]."/cookies.txt");
+	//curl_setopt($curl, CURLOPT_COOKIE, "xman_t=Nhp88qU1tdk8j7dPsWtlfxRQVsBhJ7Nww6/TM6gdHWZkvSJXXZ9J6OdA2QT3HKxhQKWSkzVb6lU+PzMvlHMNcaJN0uOPRXZdqThhMRaRl/vUtP1OyUhoUsTFdk2oatrw5ADxZGl3jCigGQKS6W21kXOIYgsPGt26WdX53KDpNcscpme2qOyGdPa0psn1oHWEmasrKsoIgHRu5D05dqObvK55qhntZEtYwycuYq/Z2DU4KplSZeDyOxW6M05iYEX/Rw32VyIU9wNJlu/OZjD+WcQuSiP4daQMCZ9nblWf+mgSWk4V1ux+l2c0/sfFj0oQO1ZsxV2wRImnwvZejG1BKkABHwdelmks0q+gS9fIrOFjL2e9DH9hZNrhqbkdWWwEM2g34oWgjWs3OkXWSjUciriX3b6HQTD9SBtr+btSSvA/v8Y7hKwvfAN2Vs+MhzWSbB/lbEgN6uI9uun70lw1rPqD3tDAg0Hn404AuW0XelOXI4xoStuRMPtqew7VuaiGpeACrVVRW8/DhSvuuhYAYL4kS8zILJXpnaNyyVchUEeuxZLNFjgtOgoR6T6LjRsEIX3XKtMimvm8VJ7pxAM0AXx/f6XaonA0yiRki6bdSGAEu3KPxBwr/cM9fCnT+MRq");
+
 
     $content = curl_exec( $ch );
     $err     = curl_errno( $ch );
@@ -256,12 +263,12 @@ function get_web_page($url)
     return $header;
 }
 
-/*function fOrder ($find_order,$id_order) 
+/*function fOrder ($find_order,$namber_order) 
 {
 if (!empty($find_order)):
 		return $find_order;
-	elseif (!empty($id_order)):
-		return $id_order;
+	elseif (!empty($namber_order)):
+		return $namber_order;
 	else:
 		return null;
 endif;
