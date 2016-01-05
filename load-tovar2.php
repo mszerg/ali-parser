@@ -13,8 +13,8 @@ header('Content-type: text/html; charset=utf-8');
 					<option value="2">Dmitriy</option>
 				</select>
 			</td>
-            <td>№ нач страницы<input type="text" name="stranica_begin" value="17"/></td>
-            <td>№ кон страницы<input type="text" name="stranica_end" value="17"/></td>
+            <td>№ нач страницы<input type="text" name="stranica_begin" value="30"/></td>
+            <td>№ кон страницы<input type="text" name="stranica_end" value="30"/></td>
             <td colspan="2">
                 <input type="submit" name="cmdLoadFromSave" value="Загрузить" />
 				<input type="submit" name="cmdLoadFromBrowser" value="Загрузить с браузера" />
@@ -147,6 +147,10 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
 				////////////////////////////////////////// Конец - Загружаем картинку товара /////////////////////////////////
 								
                 $txt_name_tovar = $product->find('.product-title', 0)->plaintext; //+
+				$txt_tmp = $product->find('.product-title a', 0)->href;
+				$txt_tmp = mb_substr($txt_tmp, mb_strpos($txt_tmp, '.html') - 14, 14);
+				//echo $txt_tmp;
+				$int_ali_id_tovar = mb_substr($txt_tmp, mb_strpos($txt_tmp, '/')+1, mb_strlen($txt_tmp));
                 //$txt_manager = $product->find('.seller-sign', 0)->plaintext;
                 $dec_price = $product->find('.product-amount span', 0)->outertext;
                 $dec_price = mb_substr($dec_price, mb_strpos($dec_price, '$') + 2, mb_strlen($dec_price) - 2); //+
@@ -177,11 +181,17 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
                     //$txt_contacts = $order->find('.feedback', 0)->outertext;
                     $dec_summa = $order->find('.amount-num', 0)->plaintext;
                     $dec_summa = mb_substr($dec_summa, mb_strpos($dec_summa, '$') + 2, mb_strlen($dec_summa) - 2);
+					$txt_magazin_name = $order->find('.store-info .info-body', 0)->plaintext;
+					$txt_magazin_url = $order->find('.second-row a', 0)->href;
+					$int_magazin_number = mb_substr($txt_magazin_url, mb_strpos($txt_magazin_url, 'store')+6, mb_strlen($txt_magazin_url));
+					
 
                     echo "<tr><td>" . $int_order . "</td>";
                     echo "<td>" . date("Y-m-d", $dt_date) . "</td>";
-                    echo "<td>" . $txt_contacts . "</td>";
-                    echo "<td>" . $dec_summa . "</td>";
+                    //echo "<td>" . $txt_magazin_url . "</td>";
+					echo "<td>" . $int_magazin_number . "</td>";
+                    echo "<td>" . $txt_magazin_name . "</td>";
+					echo "<td>" . $dec_summa . "</td>";
                     echo "<td>" . $txt_status . "</td>";
 
 
@@ -194,7 +204,7 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
                     echo " - " . $rows;
                     if ($rows == 1) { //zapis uge est', update him
                         echo '-a запись обновлена'  . "</br>";
-                        $query = "UPDATE tbl_order SET id_ali='$int_aliName', status='$txt_status' WHERE namber_order='$int_order'";
+                        $query = "UPDATE tbl_order SET id_ali='$int_aliName', ali_id_store='$int_magazin_number', store=\"$txt_magazin_name\", status='$txt_status' WHERE namber_order='$int_order'";
 
                         if (!mysql_query($query, $db_server))
                             echo "UPDATE failed: $query<br>" . mysql_error() . "<br><br>";
@@ -202,7 +212,7 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
                     else {
                         echo '-a запись вставлена'  . "</br>";
                         $query = "INSERT INTO tbl_order VALUES" .
-                            "('', '$int_aliName', '$int_order', '$dt_date', '$txt_contacts', '$dec_summa', '$txt_status','')";
+                            "('', '$int_aliName', '$int_order', '$dt_date', '$int_magazin_number', '$txt_magazin_name', '$dec_summa', '$txt_status','')";
 
                         if (!mysql_query($query, $db_server))
                             echo "INSERT failed: $query<br>" . mysql_error() . "<br><br>";
@@ -216,7 +226,7 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
                 //header("Content-Type: image/jpg");  //указываем браузеру что это изображение
                 echo "<td>" . $blob_image . "</td>";
                 echo "<td>" . $txt_name_tovar . "</td>";
-                echo "<td>" . $txt_manager . "</td>";
+                //echo "<td>" . $txt_manager . "</td>";
                 //echo $product->find('.sell-sp-main',0)->outertext . "</td>";
                 echo "<td>" . $dec_price . "</td>";
                 echo "<td>" . $int_count . "</td>";
@@ -234,7 +244,7 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
                 if ($rows == 1) { //zapis uge est', update him
                     //echo 'Обновление статуса существующей записи товара'  . "</br>";
 					//echo $txt_status_otmeni;
-                    $query = "UPDATE tbl_order_tovar SET status_otmeni='$txt_status_otmeni' WHERE snapshot_num=$txt_snapshot_num";
+                    $query = "UPDATE tbl_order_tovar SET ali_id_tovar='$int_ali_id_tovar', status_otmeni='$txt_status_otmeni' WHERE snapshot_num=$txt_snapshot_num";
 					//echo $query;
                     if (!mysql_query($query, $db_server))
                         echo "UPDATE failed: $query<br>" . mysql_error() . "<br><br>";
@@ -243,7 +253,7 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
                     //echo 'second'  . "</br>";
 					//echo $txt_status_otmeni;
                     $query = "INSERT INTO tbl_order_tovar VALUES" .
-                        "('', '$int_order', '$blob_picture', '$txt_name_tovar', '$txt_manager', '$dec_price', '$int_count', '$int_count', 
+                        "('', '$int_order', '$blob_picture', '$int_ali_id_tovar', '$txt_name_tovar', '$txt_manager', '$dec_price', '$int_count', '$int_count', 
 						'$txt_status_otmeni', '$txt_snapshot', '$txt_snapshot_num', '$bl_mobile')";
 
                     if (!mysql_query($query, $db_server))

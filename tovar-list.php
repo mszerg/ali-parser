@@ -148,7 +148,7 @@ _END;
         echo "<td>" . date("d.m.Y", $row[date_order]) . "</td>";
         echo "<td><img src=\"image.php?id=" . $row[id_tovar_order] . "\" alt=\"\" /></td>";
         echo "<td>$row[name]</td>";
-        echo "<td>$row[contacts]</td>";
+		echo "<td><a href=\"http://ru.aliexpress.com/store/$row[ali_id_store]\">$row[store]</a></td>";
         echo "<td>$row[price]</td>";
         echo "<td>$row[count_partiy]</td>";
         //echo "<td>$row[9]</td>";
@@ -204,10 +204,10 @@ _END;
 		$html = new simple_html_dom();
 		$html = str_get_html($page);
 		$str_status = $html->find('.order-status', 0)->plaintext;
-		$str_magazine= $html->find('.user-name-text', 0)->outertext;
+		//$str_magazine= $html->find('.user-name-text', 0)->outertext;
 		$str_tracknumber= $html->find('td[class=no]', 0)->plaintext;
 		
-		$query = "UPDATE tbl_order SET status='$str_status', contacts='$str_magazine', tracknumber='$str_tracknumber' WHERE namber_order=$namber_order";
+		$query = "UPDATE tbl_order SET status='$str_status', tracknumber='$str_tracknumber' WHERE namber_order=$namber_order";
 		echo $query;
 		if (!mysql_query($query, $db_server))
 			echo "Update failed: $query<br>" . mysql_error() . "<br><br>";
