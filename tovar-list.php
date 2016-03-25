@@ -56,7 +56,7 @@ or die("Unable to select database: " . mysql_error());
 mysql_query("SET NAMES utf8");
 
 ///////////////////////////////////// Отрабатывем кнопку обновить статус
-if (!empty($_POST["refresh_status"])) load_status($_POST['find_order'],$db_server);
+if (!empty($_POST["refresh_status"])) load_status($_POST['find_order'],$db_server,$_POST['id_ali']);
 
 ////////////////////////////////////// Отрабатывваем кнопку Об-ть кол-во
 if (isset($_POST['u_count']) && isset($_POST['id_tovar_order']))
@@ -107,7 +107,7 @@ if (!empty($_POST["filter"]) or !empty($_POST["filtr_by_order"]) or !empty($_POS
 		else { 
 			$sql .= " WHERE `status_otmeni` !=" . "'<span>Order Cancelled</span>'";
 			}
-    $sql .= " ORDER BY `tbl_order`.`namber_order` DESC";
+    $sql .= " ORDER BY `tbl_order`.`date_order` DESC";
 	//echo $sql;
 }
 else
@@ -121,7 +121,7 @@ else
     //echo $where_cookie . "</br>";
     //$sql  = "SELECT `tbl_order`.*, `tbl_order_tovar`.*  FROM tbl_order_tovar INNER JOIN `tbl_order` ON `tbl_order_tovar`.`namber_order` = `tbl_order`.`namber_order`". $where_cookie . " ORDER BY `tbl_order`.`namber_order` DESC";
 	$sql  = "SELECT tbl_order_user.*, tbl_order.*, tbl_order_tovar.*
-	FROM (tbl_order INNER JOIN tbl_order_user ON tbl_order.id_ali = tbl_order_user.id_ali) INNER JOIN tbl_order_tovar ON tbl_order.namber_order = tbl_order_tovar.namber_order". $where_cookie . " ORDER BY `tbl_order`.`namber_order` DESC";
+	FROM (tbl_order INNER JOIN tbl_order_user ON tbl_order.id_ali = tbl_order_user.id_ali) INNER JOIN tbl_order_tovar ON tbl_order.namber_order = tbl_order_tovar.namber_order". $where_cookie . " ORDER BY `tbl_order`.`date_order` DESC";
 	//echo "2 " . $sql;
 }
 
@@ -135,7 +135,9 @@ for ($j = 0 ; $j < $rows ; ++$j)
 {
     $row = mysql_fetch_assoc($result);
     echo "<tr>";
-		echo "<td>$row[aliUserName]</td>";
+		echo "<td>$row[aliUserName]</br>
+				<a href=\"http://services.ukrposhta.ua/bardcodesingle/Default.aspx?id=$row[tracknumber]\" target=\"_blank\">$row[tracknumber]</a>
+			 </td>";
         echo  <<<_END
         <td><a href="http://trade.aliexpress.com/order_detail.htm?orderId=$row[namber_order]" target="_blank" data-spm-anchor-id="0.0.0.0">$row[namber_order]</a>
 		<form name="cmd_filtr_order" action="" method="post">
@@ -143,10 +145,10 @@ for ($j = 0 ; $j < $rows ; ++$j)
             <input type="hidden" name="find_order" value=$row[namber_order]>
             <input type="submit" name="filtr_by_order" value="Фильтр">
         </form>
-		$row[tracknumber]</td>
+		</td>
 _END;
-        echo "<td>" . date("d.m.Y", $row[date_order]) . "</td>";
-        echo "<td><img src=\"image.php?id=" . $row[id_tovar_order] . "\" alt=\"\" /></td>";
+        echo "<td>" . date("d.m.Y", $row["date_order"]) . "</td>";
+        echo "<td><img src=\"image.php?id=" . $row["id_tovar_order"] . "\" alt=\"\" /></td>";
         echo "<td>$row[name]</td>";
 		echo "<td><a href=\"http://ru.aliexpress.com/store/$row[ali_id_store]\">$row[store]</a></td>";
         echo "<td>$row[price]</td>";
@@ -159,17 +161,32 @@ _END;
             <input type="submit" name="refresh_count" value="Об-ть кол-во"></td>
         </form>
 _END;
-        echo "<td>" . number_format($row[price]*$row[count_partiy]/$row[count], 2, '.', ' ') . "</td>";
+        echo "<td>" . number_format($row["price"]*$row["count_partiy"]/$row["count"], 2, '.', ' ') . "</td>";
         echo "<td>$row[status]";
         echo <<<_END
         <form name="update_status" action="" method="post">
             <input type="hidden" name="id_tovar_order" value=$row[id_tovar_order]>
             <input type="hidden" name="find_order" value=$row[namber_order]>
+			<input type="hidden" name="id_ali" value=$row[id_ali]>
             <input type="submit" name="refresh_status" value="Об-ть статус"></td>
         </form>
 _END;
-        echo "<td>$row[status_otmeni]</td>";
-        echo "<td>$row[snapshot]</td>";
+
+        If ($row["status_otmeni"]=="Открыть спор") {
+		echo <<<_END
+			<td><a href="http://trade.aliexpress.com/order_detail.htm?orderId=$row[namber_order]" target="_blank">$row[status_otmeni]</a></td>
+_END;
+		//echo "<td>$row[status_otmeni]</td>";
+		}
+		else {
+			echo "<td>$row[status_otmeni]</td>";
+		}
+		echo <<<_END
+		<td><a target="_blank" href="http://www.aliexpress.com/snapshot/$row[snapshot_num].html?orderId=$row[namber_order]">Скриншот</a></br>
+		<a target="_blank" href="http://feedback.aliexpress.com/management/leaveFeedback.htm?parentOrderId=$row[namber_order]&isOrderCompleted=Y">Отзыв</a>
+		</td>
+_END;
+        //echo "<td>$row[snapshot]</td>";
 
     echo "</tr>";
 }
@@ -184,13 +201,10 @@ function get_post($var)
 
 
 
-function load_status($namber_order,$db_server)
+function load_status($namber_order,$db_server,$id_ali)
 {
-    echo "load status - " . $namber_order;
-    echo  <<<_END
-        <a href="http://trade.aliexpress.com/order_detail.htm?orderId=$namber_order" target="_blank" data-spm-anchor-id="0.0.0.0">$namber_order</a>
-_END;
-    $result = get_web_page("http://trade.aliexpress.com/order_detail.htm?orderId=$namber_order");
+	
+    $result = get_web_page("http://trade.aliexpress.com/order_detail.htm?orderId=$namber_order",$id_ali);
     echo $result['errno'];
     if (($result['errno'] != 0 )||($result['http_code'] != 200))
     {
@@ -199,40 +213,54 @@ _END;
     else
     {
         $page = $result['content'];
-        echo "Загружаю страницу";
+        echo "Загружаю страницу </br>";
         //echo $page;
 		$html = new simple_html_dom();
 		$html = str_get_html($page);
-		$str_status = $html->find('.order-status', 0)->plaintext;
-		//$str_magazine= $html->find('.user-name-text', 0)->outertext;
-		$str_tracknumber= $html->find('td[class=no]', 0)->plaintext;
-		
-		$query = "UPDATE tbl_order SET status='$str_status', tracknumber='$str_tracknumber' WHERE namber_order=$namber_order";
-		echo $query;
-		if (!mysql_query($query, $db_server))
-			echo "Update failed: $query<br>" . mysql_error() . "<br><br>";
-		
-		$html = $html->find('.product-table',0);
-		//echo $html;
-		foreach ($html->find('.order-bd') as $product) {
-				$str_status_otmeni = $product->find('.trade-status', 0)->plaintext;
-			    $txt_snapshot = $product->find('.desc a', 0)->outertext;
-                $str_begin = mb_strpos($txt_snapshot,'snapshot')+9;
-                $str_end = mb_strpos($txt_snapshot,'.html');
-                $txt_snapshot_num = mb_substr($txt_snapshot,$str_begin,$str_end-$str_begin);
-				//echo $txt_snapshot_num;
-					
-				$query = "UPDATE tbl_order_tovar SET status_otmeni='$str_status_otmeni' WHERE snapshot_num=$txt_snapshot_num";
-				//echo $query;
-				if (!mysql_query($query, $db_server))
-					echo "Update failed: $query<br>" . mysql_error() . "<br><br>";
+		$str_status = trim($html->find('.order-status', 0)->plaintext);
+		if (!empty($str_status)) {
+			//echo "load status - " . $namber_order;
+			echo  <<<_END
+			load status - <a href="http://trade.aliexpress.com/order_detail.htm?orderId=$namber_order" target="_blank" data-spm-anchor-id="0.0.0.0">$namber_order</a></br>
+_END;
+			//$str_magazine= $html->find('.user-name-text', 0)->outertext;
+			$str_tracknumber= trim($html->find('td[class=no]', 0)->plaintext);
+			
+			$query = "UPDATE tbl_order SET status='$str_status', tracknumber='$str_tracknumber' WHERE namber_order=$namber_order";
+			echo $query;
+			if (!mysql_query($query, $db_server))
+				echo "Update failed: $query<br>" . mysql_error() . "<br><br>";
+			
+			$html = $html->find('.product-table',0);
+			//echo $html;
+			foreach ($html->find('.order-bd') as $product) {
+					$str_status_otmeni = trim($product->find('.trade-status', 0)->plaintext);
+					if (strlen($str_status_otmeni)>50) { //Убираем лишнее в строке типа "Получено подтверждение 	     Открыть спор"
+						$str_status_otmeni=mb_substr($str_status_otmeni, 0, mb_strpos($str_status_otmeni,' ',10,"UTF-8"),"UTF-8");
+					}
+					$txt_snapshot = trim($product->find('.desc a', 0)->outertext);
+					$str_begin = mb_strpos($txt_snapshot,'snapshot')+9;
+					$str_end = mb_strpos($txt_snapshot,'.html');
+					$txt_snapshot_num = mb_substr($txt_snapshot,$str_begin,$str_end-$str_begin);
+					//echo $txt_snapshot_num;
+						
+					$query = "UPDATE tbl_order_tovar SET status_otmeni='$str_status_otmeni' WHERE snapshot_num=$txt_snapshot_num";
+					//echo $query;
+					if (!mysql_query($query, $db_server))
+						echo "Update failed: $query<br>" . mysql_error() . "<br><br>";
+			}
 		}
+		else
+			{
+				echo "Статус заказа пустой, скорее всего не обновлены куки";
+			}
 	}
 }
 
 
-function get_web_page($url)
+function get_web_page($url,$id_ali)
 {
+	
     $uagent = "Opera/9.80 (Windows NT 6.1; WOW64) Presto/2.12.388 Version/12.14";
 
     $ch = curl_init( $url );
@@ -247,7 +275,12 @@ function get_web_page($url)
     curl_setopt($ch, CURLOPT_MAXREDIRS, 10);       // останавливаться после 10-ого редиректа
 	//curl_setopt($ch, CURLOPT_CAINFO, "./cacert.pem");
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-	curl_setopt($ch, CURLOPT_COOKIEFILE,$_SERVER[DOCUMENT_ROOT]."/cookies.txt");
+	if ($id_ali == 1) {
+		curl_setopt($ch, CURLOPT_COOKIEFILE,$_SERVER[DOCUMENT_ROOT]."/cookies/Leonid/cookies.txt");
+	} elseif ($id_ali == 2) {
+		curl_setopt($ch, CURLOPT_COOKIEFILE,$_SERVER[DOCUMENT_ROOT]."/cookies/Dmitriy/cookies.txt");
+	}
+	//curl_setopt($ch, CURLOPT_COOKIEFILE,$_SERVER[DOCUMENT_ROOT]."/cookies.txt");
 	//curl_setopt($curl, CURLOPT_COOKIE, "xman_t=Nhp88qU1tdk8j7dPsWtlfxRQVsBhJ7Nww6/TM6gdHWZkvSJXXZ9J6OdA2QT3HKxhQKWSkzVb6lU+PzMvlHMNcaJN0uOPRXZdqThhMRaRl/vUtP1OyUhoUsTFdk2oatrw5ADxZGl3jCigGQKS6W21kXOIYgsPGt26WdX53KDpNcscpme2qOyGdPa0psn1oHWEmasrKsoIgHRu5D05dqObvK55qhntZEtYwycuYq/Z2DU4KplSZeDyOxW6M05iYEX/Rw32VyIU9wNJlu/OZjD+WcQuSiP4daQMCZ9nblWf+mgSWk4V1ux+l2c0/sfFj0oQO1ZsxV2wRImnwvZejG1BKkABHwdelmks0q+gS9fIrOFjL2e9DH9hZNrhqbkdWWwEM2g34oWgjWs3OkXWSjUciriX3b6HQTD9SBtr+btSSvA/v8Y7hKwvfAN2Vs+MhzWSbB/lbEgN6uI9uun70lw1rPqD3tDAg0Hn404AuW0XelOXI4xoStuRMPtqew7VuaiGpeACrVVRW8/DhSvuuhYAYL4kS8zILJXpnaNyyVchUEeuxZLNFjgtOgoR6T6LjRsEIX3XKtMimvm8VJ7pxAM0AXx/f6XaonA0yiRki6bdSGAEu3KPxBwr/cM9fCnT+MRq");
 
 
