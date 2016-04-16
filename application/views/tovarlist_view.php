@@ -1,35 +1,9 @@
 <?php
-header('Content-type: text/html; charset=utf-8');
+//header('Content-type: text/html; charset=utf-8');
 ini_set("max_execution_time", "120"); //увеличиваем допустимое время выполнения скрипта
 
 //подгружаем библиотеку
 require_once 'library/simple_html_dom.php';
-
-///////////////////////////////////////////Запоминаем данные в сессию
-session_start();
-$_SESSION['filtr_AllRecord'] = $_POST["AllRecord"];
-$_SESSION['filtr_tovar'] = $_POST["find_tovar"];
-//if (empty($_POST["refresh_count"])) $_SESSION['filtr_order'] = fOrder($_POST["find_order"],$_POST["namber_order"]);
-if (empty($_POST["refresh_count"])) $_SESSION['filtr_order'] = $_POST["find_order"];
-$_SESSION['filtr_begin_date'] = $_POST["begin_date"];
-$_SESSION['filtr_end_date'] = $_POST["end_date"];
-
-/////////////////////////////////////////// Обнуляем сессию если нажата кнопка Удалить фильтр
-if (!empty($_POST["delfilter"])) {
-$_SESSION['filtr_AllRecord']="";
-$_SESSION['filtr_tovar'] = "";
-$_SESSION['filtr_order'] = "";
-$_SESSION['filtr_begin_date'] = "";
-$_SESSION['filtr_end_date'] = "";
-}
-
-//////////////////////////////////////////Присваиваем перемменным значения сессии
-$filtr_AllRecord = htmlspecialchars($_SESSION['filtr_AllRecord']);
-$filtr_tovar = htmlspecialchars($_SESSION['filtr_tovar']);
-$filtr_order = htmlspecialchars($_SESSION['filtr_order']);
-$filtr_begin_date = htmlspecialchars($_SESSION['filtr_begin_date']);
-$filtr_end_date = htmlspecialchars($_SESSION['filtr_end_date']);
-
 
 echo <<<_END
   <style>
@@ -125,7 +99,7 @@ function number_format(number, decimals, dec_point, thousands_sep) {
 </script>                    
 _END;
 
-/////////////////////////////////////////// Форма фильтра
+/////////////////////////////////////////// Форма фильтра ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 if ($filtr_AllRecord==2) $str_AllRecord = '<input type="radio" name="AllRecord" id="AllRecord1" value=1 /><label for="AllRecord1">Последние 100 записей</label> <input type="radio" checked="checked" name="AllRecord" id="AllRecord2" value=2 /><label for="AllRecord2">Все записи&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</label>';
 else $str_AllRecord = '<input type="radio" checked="checked" name="AllRecord" id="AllRecord1" value=1 /><label for="AllRecord1">Последние 100 записей</label> <input type="radio" name="AllRecord" id="AllRecord2" value=2 /><label for="AllRecord2">Все записи&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</label>';
@@ -151,108 +125,38 @@ echo <<<_END
 </form>
 _END;
 
+		///////////////////////////////////// Отрабатывем кнопку обновить статус
+		if (!empty($_POST["refresh_status"])) load_status($_POST['find_order'],$db_server,$_POST['id_ali']);
 
-///////////////////////////////// BEGIN Podkluchaem BD //////////////////////////////
-require_once 'login.php';
-$db_server = mysql_connect($db_hostname, $db_username, $db_password);
+		////////////////////////////////////// Отрабатывваем кнопку Обновить всем статус
+		if (isset($_POST['RefreshAllStatus']))
+		{
+			//$query = "SELECT tbl_order.id_ali, tbl_order.namber_order FROM tbl_order WHERE (((tbl_order.status)<>'Завершено' And (tbl_order.status)<>'Закрыт') AND ((tbl_order.date_order2)<' 	2015-12-27'));";
+			$query = "SELECT tbl_order.id_ali, tbl_order.namber_order FROM tbl_order WHERE (((tbl_order.status)<>'Завершено' And (tbl_order.status)<>'Закрыт'));";
+			$result = mysql_query($query);
+				if (!mysql_query($query, $db_server))
+				echo "Update failed: $query<br>" .
+					mysql_error() . "<br><br>";
+			$rows = mysql_num_rows($result);
 
-if (!$db_server) die("Unable to connect to MySQL: " . mysql_error());
-
-mysql_select_db($db_database, $db_server)
-or die("Unable to select database: " . mysql_error());
-
-mysql_query("SET NAMES utf8");
-
-///////////////////////////////////// Отрабатывем кнопку обновить статус
-if (!empty($_POST["refresh_status"])) load_status($_POST['find_order'],$db_server,$_POST['id_ali']);
-
-////////////////////////////////////// Отрабатывваем кнопку Обновить всем статус
-if (isset($_POST['RefreshAllStatus']))
-{
-    //$query = "SELECT tbl_order.id_ali, tbl_order.namber_order FROM tbl_order WHERE (((tbl_order.status)<>'Завершено' And (tbl_order.status)<>'Закрыт') AND ((tbl_order.date_order2)<' 	2015-12-27'));";
-	$query = "SELECT tbl_order.id_ali, tbl_order.namber_order FROM tbl_order WHERE (((tbl_order.status)<>'Завершено' And (tbl_order.status)<>'Закрыт'));";
-	$result = mysql_query($query);
-	    if (!mysql_query($query, $db_server))
-        echo "Update failed: $query<br>" .
-            mysql_error() . "<br><br>";
-	$rows = mysql_num_rows($result);
-
-	for ($j = 0 ; $j < $rows ; ++$j)
-	{
-		$row = mysql_fetch_assoc($result);
-			echo "Номер заказа $row[namber_order] </br>";
-			load_status($row[namber_order],$db_server,$row['id_ali']);
-	}
-}
-
-///////////////////////////////////// Функциия для условия where в запросе на выборку
-function addWhere($where, $add, $and = true) {
-    if ($where) {
-        if ($and) $where .= " AND $add";
-        else $where .= " OR $add";
-    }
-    else $where = $add;
-    return $where;
-}
-
-// Главный запрос на выборку без Where и Order by
-$sql  = "SELECT tbl_order_user.*, tbl_order.*, tbl_order_tovar.*, tbl_tovar.id_virtuemart, tbl_tovar.NameVirtuemart
-FROM ((tbl_order INNER JOIN tbl_order_user ON tbl_order.id_ali = tbl_order_user.id_ali) INNER JOIN tbl_order_tovar ON tbl_order.namber_order = tbl_order_tovar.namber_order) LEFT JOIN tbl_tovar ON tbl_order_tovar.ali_id_tovar = tbl_tovar.id_import";
-echo "Фильтр по товару" . $filtr_tovar . "</br>";
-//Добавляем условия к основному запросу в при нажатии разных кнопок
-if (!empty($_POST["filter"]) or !empty($_POST["filtr_by_order"]) or !empty($_POST["u_count"]) or !empty($_POST["refresh_status"]) or !empty($_POST['vm_update_count'])) {
-    $where = "";
-    if ($_POST["begin_date"]) $where = addWhere($where, "`date_order` >= '".htmlspecialchars(strtotime($_POST["begin_date"])))."'";
-    if ($_POST["end_date"]) $where = addWhere($where, "`date_order` <= '".htmlspecialchars(strtotime($_POST["end_date"] . '23:59:59')))."'";
-	if (!empty($filtr_order)) $where = addWhere($where, "`tbl_order`.`namber_order` = '" . htmlspecialchars($filtr_order) . "'");
-    //if ($_POST["find_tovar"]) $where = addWhere($where, "`name` like '%" . htmlspecialchars($_POST["find_tovar"])) . "%'";
-	if (!empty($filtr_tovar)) $where = addWhere($where, "`name` like '%" . htmlspecialchars($filtr_tovar) . "%'");
-	/*$sql  = "SELECT tbl_order_user.*, tbl_order.*, tbl_order_tovar.*
-	FROM (tbl_order INNER JOIN tbl_order_user ON tbl_order.id_ali = tbl_order_user.id_ali) INNER JOIN tbl_order_tovar ON tbl_order.namber_order = tbl_order_tovar.namber_order";*/
-	
-    /*if ($where) {
-			$sql .= " WHERE $where and `status_otmeni` !=" . "'<span>Order Cancelled</span>'";
+			for ($j = 0 ; $j < $rows ; ++$j)
+			{
+				$row = mysql_fetch_assoc($result);
+					echo "Номер заказа $row[namber_order] </br>";
+					load_status($row[namber_order],$db_server,$row['id_ali']);
 			}
-		else { 
-			$sql .= " WHERE `status_otmeni` !=" . "'<span>Order Cancelled</span>'";
-			}*/
-	if ($where) $sql .= " WHERE " . $where;
-    $sql .= " ORDER BY `tbl_order`.`date_order` DESC";
-	echo $sql;
-}
-else
-{
-    if ($filtr_tovar != '') {
-			$where_cookie = " WHERE `name` like '%" . $filtr_tovar . "%' and `status_otmeni` !=" . "'<span>Order Cancelled</span>'";
 		}
-		else {
-			$where_cookie = " WHERE `status_otmeni` !=" . "'<span>Order Cancelled</span>'";
-		}
-    //echo $where_cookie . "</br>";
-    //$sql  = "SELECT `tbl_order`.*, `tbl_order_tovar`.*  FROM tbl_order_tovar INNER JOIN `tbl_order` ON `tbl_order_tovar`.`namber_order` = `tbl_order`.`namber_order`". $where_cookie . " ORDER BY `tbl_order`.`namber_order` DESC";
-	/*$sql  = "SELECT tbl_order_user.*, tbl_order.*, tbl_order_tovar.*
-	FROM (tbl_order INNER JOIN tbl_order_user ON tbl_order.id_ali = tbl_order_user.id_ali) INNER JOIN tbl_order_tovar ON tbl_order.namber_order = tbl_order_tovar.namber_order". $where_cookie . " ORDER BY `tbl_order`.`date_order` DESC";*/
-	$sql  = $sql . $where_cookie . " ORDER BY `tbl_order`.`date_order` DESC";
-	
-	//echo "2 " . $sql;
-}
-
-//Отображаем только последние 100 записей, если выбран соответствующий радиобар в шапке страници
-//Нужно что бы быстрее обновлялась страница и не нагружался сервыер без причины
-if ($_POST["AllRecord"] != 2) {
-	$sql = $sql . " LIMIT 100";
-}
 
 //////////////////////////////////// Отрисовывем главную таблицу
-$result = mysql_query($sql);
-$rows = mysql_num_rows($result);
+//$result = mysql_query($sql);
+//$rows = mysql_num_rows($result);
 
 echo "<table border=\"1\"> <tr><td>ali-логин</td><td>№ Заказа</td><td>Дата заказа</td><td>Фото</td><td>Товар</td><td>Наименование в Viruemart</td><td>Контакт</td><td>Сумма заказа,у.е.</td><td>Кол-во партий</td><td>Количество шт</td><td>Цена за ед., у.е.</td><td>Оприх-ть vm</td><td>Статус заказа</td><td>Статус отмены</td><td>Снимок заказа</td></tr>";
 
 for ($j = 0 ; $j < $rows ; ++$j)
 {
 //echo "<div id='tovar_$j'>";
-    $row = mysql_fetch_assoc($result);
+//    $row = mysql_fetch_assoc($result);
     echo "<tr id='tovar_$j'>";
 		echo "<td>$row[aliUserName]</br>
 				<a href=\"http://services.ukrposhta.ua/bardcodesingle/Default.aspx?id=$row[tracknumber]\" target=\"_blank\">$row[tracknumber]</a>

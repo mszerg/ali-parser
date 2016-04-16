@@ -1,12 +1,12 @@
 <?php
-header('Content-type: text/html; charset=utf-8');
+//header('Content-type: text/html; charset=utf-8');
 ini_set("max_execution_time", "120"); //увеличиваем допустимое время выполнения скрипта
 
 //подгружаем библиотеку
 require_once 'library/simple_html_dom.php';
 
 ///////////////////////////////////////////Запоминаем данные в сессию
-session_start();
+//session_start();
 $_SESSION['filtr_AllRecord'] = $_POST["AllRecord"];
 $_SESSION['filtr_tovar'] = $_POST["find_tovar"];
 //if (empty($_POST["refresh_count"])) $_SESSION['filtr_order'] = fOrder($_POST["find_order"],$_POST["namber_order"]);
