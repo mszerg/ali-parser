@@ -90,9 +90,14 @@ class Controller_Tovarlist extends Controller
 	}
 
 
-    function load_status($namber_order,$id_ali)
+    function action_load_status()
     {
-        require_once '../library/simple_html_dom.php';
+        require_once $_SERVER['DOCUMENT_ROOT'] . '/library/simple_html_dom.php';
+		
+		$namber_order = $_POST['find_order'];
+		$id_ali = $_POST['id_ali'];
+		
+		//echo "namber_order = " . $namber_order . " id = " . $id_ali;
 
         $result = $this->get_web_page("http://trade.aliexpress.com/order_detail.htm?orderId=$namber_order",$id_ali);
         echo $result['errno'];
@@ -104,7 +109,7 @@ class Controller_Tovarlist extends Controller
         {
             $page = $result['content'];
             echo "Загружаю страницу </br>";
-            //echo $page;
+        //    echo $page;
             $html = str_get_html($page);
             $str_status = trim($html->find('.order-status', 0)->plaintext);
             if (!empty($str_status)) {
@@ -186,7 +191,7 @@ _END;
         $header['errmsg']  = $errmsg;
         $header['content'] = $content;
         return $header;
-
+}
 
     ///////////////////////////////////// Функциия для условия where в запросе на выборку
     private function addWhere($where, $add, $and = true)

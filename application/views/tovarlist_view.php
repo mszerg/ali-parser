@@ -55,7 +55,7 @@ _END;
 
 		///////////////////////////////////// Отрабатывем кнопку обновить статус
 		//if (!empty($_POST["refresh_status"])) load_status($_POST['find_order'],$db_server,$_POST['id_ali']);
-        if (!empty($_POST["refresh_status"])) require_once 'library/simple_html_dom.php';
+        //if (!empty($_POST["refresh_status"])) require_once 'library/simple_html_dom.php';
 
 		////////////////////////////////////// Отрабатывваем кнопку Обновить всем статус
 		if (isset($_POST['RefreshAllStatus']))
@@ -133,7 +133,7 @@ _END;
 		echo "</td>";
         echo "<td>$row[status]";
         echo <<<_END
-        <form name="update_status" action="" method="post">
+        <form name="update_status" action="/tovarlist/load_status/" method="post">
             <input type="hidden" name="id_tovar_order" value=$row[id_tovar_order]>
             <input type="hidden" name="find_order" value=$row[namber_order]>
 			<input type="hidden" name="id_ali" value=$row[id_ali]>
@@ -169,7 +169,6 @@ function get_post($var)
     return mysql_real_escape_string($_POST[$var]);
 }
 
-}
 
 /*function fOrder ($find_order,$namber_order) 
 {
