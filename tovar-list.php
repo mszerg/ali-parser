@@ -345,7 +345,7 @@ function load_status($namber_order,$db_server,$id_ali)
         $page = $result['content'];
         echo "Загружаю страницу </br>";
         //echo $page;
-		$html = new simple_html_dom();
+		//$html = new simple_html_dom();
 		$html = str_get_html($page);
 		$str_status = trim($html->find('.order-status', 0)->plaintext);
 		if (!empty($str_status)) {

@@ -3,7 +3,7 @@
 ini_set("max_execution_time", "120"); //увеличиваем допустимое время выполнения скрипта
 
 //подгружаем библиотеку
-require_once 'library/simple_html_dom.php';
+//require_once 'library/simple_html_dom.php';
 
 echo <<<_END
   <style>
@@ -17,87 +17,15 @@ _END;
     //$vm_id_tovar = $_POST['vm_id_tovar'];
     //$u_count = $_POST['u_count'];
 	//echo "sfdsd=" . $vm_id_tovar;
-echo <<<_END
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
-<script type="text/javascript">
-$(document).ready(function(){
 
-   $('[id*=but1_]').click(function(){
-   var id=$(this).attr('id');
-   var prefix=id.substring(id.indexOf("_")+1);
-   var vm_id_tovar = $('#id_tovar_'+prefix).val();
-   var id_tovar_order = $('#id_tovar_order_'+prefix).val();
-   var u_count = $('#count_'+prefix).val();
-    $.ajax({
-		type:"POST",
-		url:"vm-count-update.php", 
-        data:"vm_id_tovar=" + vm_id_tovar + "&u_count=" + u_count + "&id_tovar_order="+id_tovar_order, 
-        success:function(result){
-        	$('#par1_'+prefix).html(result)
-			$('#'+id).fadeOut(1000);
-			$('#tovar_'+prefix + ' #chk_oprih_vm').attr("checked", true);
-			/*alert('#'+id + ' Код товра='+ vm_id_tovar + ' Кол-во товара=' + u_count)*/},
-		error: function(){
-        alert('error')
-		}
-      });
-	return false;
-   });
-});
 
-$(document).ready(function(){
+//////////////////////////////////////////Присваиваем перемменным значения сессии
+$filtr_AllRecord = htmlspecialchars($_SESSION['filtr_AllRecord']);
+$filtr_tovar = htmlspecialchars($_SESSION['filtr_tovar']);
+$filtr_order = htmlspecialchars($_SESSION['filtr_order']);
+$filtr_begin_date = htmlspecialchars($_SESSION['filtr_begin_date']);
+$filtr_end_date = htmlspecialchars($_SESSION['filtr_end_date']);
 
-   $('[id*=but2_]').click(function(){
-   var id=$(this).attr('id');
-   var prefix=id.substring(id.indexOf("_")+1);
-   var id_tovar_order = $('#id_tovar_order_'+prefix).val();
-   var u_count = $('#count_'+prefix).val();
-    $.ajax({
-		type:"POST",
-		url:"count-update.php", 
-        data:"id_tovar_order=" + id_tovar_order + "&u_count=" + u_count, 
-        success:function(result){
-			/*alert('#'+id + ' Код товра='+ $('#sum_'+prefix).html() + ' Кол-во товара=' + $('#count_partiy_'+prefix).html() + ' Произведение' + $('#sum_'+prefix).html()*$('#count_partiy_'+prefix).html()/u_count)*/
-			$('#price_'+prefix).html(number_format($('#sum_'+prefix).html()*$('#count_partiy_'+prefix).html()/u_count, 2, '.', ' '))
-        	/*$('#par1_'+prefix).html(result)
-			alert('#'+id + ' Код товра='+ id_tovar_order + ' Кол-во товара=' + u_count)*/},
-		error: function(){
-        alert('error')
-		}
-      });
-	return false;
-   });
-});
-
-function number_format(number, decimals, dec_point, thousands_sep) {
-  number = (number + '').replace(/[^0-9+\-Ee.]/g, '');
-  var n = !isFinite(+number) ? 0 : +number,
-    prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
-    sep = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep,
-    dec = (typeof dec_point === 'undefined') ? '.' : dec_point,
-    s = '',
-    toFixedFix = function(n, prec) {
-      var k = Math.pow(10, prec);
-      return '' + (Math.round(n * k) / k)
-        .toFixed(prec);
-    };
-  // Fix for IE parseFloat(0.55).toFixed(0) = 0;
-  s = (prec ? toFixedFix(n, prec) : '' + Math.round(n))
-    .split('.');
-  if (s[0].length > 3) {
-    s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
-  }
-  if ((s[1] || '')
-    .length < prec) {
-    s[1] = s[1] || '';
-    s[1] += new Array(prec - s[1].length + 1)
-      .join('0');
-  }
-  return s.join(dec);
-}
-
-</script>                    
-_END;
 
 /////////////////////////////////////////// Форма фильтра ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -126,7 +54,8 @@ echo <<<_END
 _END;
 
 		///////////////////////////////////// Отрабатывем кнопку обновить статус
-		if (!empty($_POST["refresh_status"])) load_status($_POST['find_order'],$db_server,$_POST['id_ali']);
+		//if (!empty($_POST["refresh_status"])) load_status($_POST['find_order'],$db_server,$_POST['id_ali']);
+        if (!empty($_POST["refresh_status"])) require_once 'library/simple_html_dom.php';
 
 		////////////////////////////////////// Отрабатывваем кнопку Обновить всем статус
 		if (isset($_POST['RefreshAllStatus']))
@@ -152,13 +81,20 @@ _END;
 //$rows = mysql_num_rows($result);
 
 echo "<table border=\"1\"> <tr><td>ali-логин</td><td>№ Заказа</td><td>Дата заказа</td><td>Фото</td><td>Товар</td><td>Наименование в Viruemart</td><td>Контакт</td><td>Сумма заказа,у.е.</td><td>Кол-во партий</td><td>Количество шт</td><td>Цена за ед., у.е.</td><td>Оприх-ть vm</td><td>Статус заказа</td><td>Статус отмены</td><td>Снимок заказа</td></tr>";
-
-for ($j = 0 ; $j < $rows ; ++$j)
+$j = 0;
+//for ($j = 0 ; $j < $rows ; ++$j)
+//for ($j = 0 ; $j < 100 ; ++$j)
+foreach($data as $row)
+//while ($row  = $data)
 {
-//echo "<div id='tovar_$j'>";
-//    $row = mysql_fetch_assoc($result);
+    ++$j;
+    //$row=$rows[$j];
+    //    var_dump($row);
+    //echo "<div id='tovar_$j'>";
+    //$row = mysql_fetch_assoc($result);
+    //$row=$data;
     echo "<tr id='tovar_$j'>";
-		echo "<td>$row[aliUserName]</br>
+		echo "<td>" . $row['aliUserName'] . "</br>
 				<a href=\"http://services.ukrposhta.ua/bardcodesingle/Default.aspx?id=$row[tracknumber]\" target=\"_blank\">$row[tracknumber]</a>
 			 </td>";
         echo  <<<_END
@@ -187,7 +123,7 @@ _END;
 _END;
         echo "<td id='price_$j'>" . number_format($row["price"]*$row["count_partiy"]/$row["count"], 2, '.', ' ') . "</td>";
 		echo "<td>";
-			if ($row[oprihodovan_vm]==-1) echo "<input id = 'chk_oprih_vm' type='checkbox' checked='checked' disabled='disabled' />";
+			if ($row['oprihodovan_vm']==-1) echo "<input id = 'chk_oprih_vm' type='checkbox' checked='checked' disabled='disabled' />";
 			else {
 				echo "<input id = 'chk_oprih_vm' type='checkbox' disabled='disabled' />";
 				echo "<input id='id_tovar_$j' type='hidden' name='vm_id_tovar' value=$row[id_virtuemart]>";
@@ -233,101 +169,6 @@ function get_post($var)
     return mysql_real_escape_string($_POST[$var]);
 }
 
-
-
-function load_status($namber_order,$db_server,$id_ali)
-{
-	
-    $result = get_web_page("http://trade.aliexpress.com/order_detail.htm?orderId=$namber_order",$id_ali);
-    echo $result['errno'];
-    if (($result['errno'] != 0 )||($result['http_code'] != 200))
-    {
-        echo $result['errmsg'];
-    }
-    else
-    {
-        $page = $result['content'];
-        echo "Загружаю страницу </br>";
-        //echo $page;
-		$html = new simple_html_dom();
-		$html = str_get_html($page);
-		$str_status = trim($html->find('.order-status', 0)->plaintext);
-		if (!empty($str_status)) {
-			//echo "load status - " . $namber_order;
-			echo  <<<_END
-			load status - <a href="http://trade.aliexpress.com/order_detail.htm?orderId=$namber_order" target="_blank" data-spm-anchor-id="0.0.0.0">$namber_order</a></br>
-_END;
-			//$str_magazine= $html->find('.user-name-text', 0)->outertext;
-			$str_tracknumber= trim($html->find('td[class=no]', 0)->plaintext);
-			
-			$query = "UPDATE tbl_order SET status='$str_status', tracknumber='$str_tracknumber' WHERE namber_order=$namber_order";
-			echo $query;
-			if (!mysql_query($query, $db_server))
-				echo "Update failed: $query<br>" . mysql_error() . "<br><br>";
-			
-			$html = $html->find('.product-table',0);
-			//echo $html;
-			foreach ($html->find('.order-bd') as $product) {
-					$str_status_otmeni = trim($product->find('.trade-status', 0)->plaintext);
-					if (strlen($str_status_otmeni)>50) { //Убираем лишнее в строке типа "Получено подтверждение 	     Открыть спор"
-						$str_status_otmeni=mb_substr($str_status_otmeni, 0, mb_strpos($str_status_otmeni,' ',10,"UTF-8"),"UTF-8");
-					}
-					$txt_snapshot = trim($product->find('.desc a', 0)->outertext);
-					$str_begin = mb_strpos($txt_snapshot,'snapshot')+9;
-					$str_end = mb_strpos($txt_snapshot,'.html');
-					$txt_snapshot_num = mb_substr($txt_snapshot,$str_begin,$str_end-$str_begin);
-					//echo $txt_snapshot_num;
-						
-					$query = "UPDATE tbl_order_tovar SET status_otmeni='$str_status_otmeni' WHERE snapshot_num=$txt_snapshot_num";
-					//echo $query;
-					if (!mysql_query($query, $db_server))
-						echo "Update failed: $query<br>" . mysql_error() . "<br><br>";
-			}
-		}
-		else
-			{
-				echo "Статус заказа пустой, скорее всего не обновлены куки";
-			}
-	}
-}
-
-
-function get_web_page($url,$id_ali)
-{
-	
-    $uagent = "Opera/9.80 (Windows NT 6.1; WOW64) Presto/2.12.388 Version/12.14";
-
-    $ch = curl_init( $url );
-
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);   // возвращает веб-страницу
-    curl_setopt($ch, CURLOPT_HEADER, 0);           // не возвращает заголовки
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);   // переходит по редиректам
-    curl_setopt($ch, CURLOPT_ENCODING, "");        // обрабатывает все кодировки
-    curl_setopt($ch, CURLOPT_USERAGENT, $uagent);  // useragent
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 120); // таймаут соединения
-    curl_setopt($ch, CURLOPT_TIMEOUT, 120);        // таймаут ответа
-    curl_setopt($ch, CURLOPT_MAXREDIRS, 10);       // останавливаться после 10-ого редиректа
-	//curl_setopt($ch, CURLOPT_CAINFO, "./cacert.pem");
-	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-	if ($id_ali == 1) {
-		curl_setopt($ch, CURLOPT_COOKIEFILE,$_SERVER[DOCUMENT_ROOT]."/cookies/Leonid/cookies.txt");
-	} elseif ($id_ali == 2) {
-		curl_setopt($ch, CURLOPT_COOKIEFILE,$_SERVER[DOCUMENT_ROOT]."/cookies/Dmitriy/cookies.txt");
-	}
-	//curl_setopt($ch, CURLOPT_COOKIEFILE,$_SERVER[DOCUMENT_ROOT]."/cookies.txt");
-	//curl_setopt($curl, CURLOPT_COOKIE, "xman_t=Nhp88qU1tdk8j7dPsWtlfxRQVsBhJ7Nww6/TM6gdHWZkvSJXXZ9J6OdA2QT3HKxhQKWSkzVb6lU+PzMvlHMNcaJN0uOPRXZdqThhMRaRl/vUtP1OyUhoUsTFdk2oatrw5ADxZGl3jCigGQKS6W21kXOIYgsPGt26WdX53KDpNcscpme2qOyGdPa0psn1oHWEmasrKsoIgHRu5D05dqObvK55qhntZEtYwycuYq/Z2DU4KplSZeDyOxW6M05iYEX/Rw32VyIU9wNJlu/OZjD+WcQuSiP4daQMCZ9nblWf+mgSWk4V1ux+l2c0/sfFj0oQO1ZsxV2wRImnwvZejG1BKkABHwdelmks0q+gS9fIrOFjL2e9DH9hZNrhqbkdWWwEM2g34oWgjWs3OkXWSjUciriX3b6HQTD9SBtr+btSSvA/v8Y7hKwvfAN2Vs+MhzWSbB/lbEgN6uI9uun70lw1rPqD3tDAg0Hn404AuW0XelOXI4xoStuRMPtqew7VuaiGpeACrVVRW8/DhSvuuhYAYL4kS8zILJXpnaNyyVchUEeuxZLNFjgtOgoR6T6LjRsEIX3XKtMimvm8VJ7pxAM0AXx/f6XaonA0yiRki6bdSGAEu3KPxBwr/cM9fCnT+MRq");
-
-
-    $content = curl_exec( $ch );
-    $err     = curl_errno( $ch );
-    $errmsg  = curl_error( $ch );
-    $header  = curl_getinfo( $ch );
-    curl_close( $ch );
-
-    $header['errno']   = $err;
-    $header['errmsg']  = $errmsg;
-    $header['content'] = $content;
-    return $header;
 }
 
 /*function fOrder ($find_order,$namber_order) 

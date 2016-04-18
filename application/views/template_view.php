@@ -20,24 +20,6 @@ Modified by VitalySwipe
 		<link href="http://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css" />
 		<link href="http://fonts.googleapis.com/css?family=Kreon" rel="stylesheet" type="text/css" />
 		<link rel="stylesheet" type="text/css" href="/css/style.css" />
-		<script src="/js/jquery-1.6.2.js" type="text/javascript"></script>
-		<script type="text/javascript">
-		// return a random integer between 0 and number
-		function random(number) {
-			
-			return Math.floor( Math.random()*(number+1) );
-		};
-		
-		// show random quote
-		$(document).ready(function() { 
-
-			var quotes = $('.quote');
-			quotes.hide();
-			
-			var qlen = quotes.length; //document.write( random(qlen-1) );
-			$( '.quote:eq(' + random(qlen-1) + ')' ).show(); //tag:eq(1)
-		});
-		</script>
 	</head>
 	<body>
 		<div id="wrapper">
