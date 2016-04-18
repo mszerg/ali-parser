@@ -1,30 +1,126 @@
-<?php
-//header('Content-type: text/html; charset=utf-8');
-ini_set("max_execution_time", "120"); //увеличиваем допустимое время выполнения скрипта
-
-//подгружаем библиотеку
-//require_once 'library/simple_html_dom.php';
-
-echo <<<_END
-  <style>
+<style>
    p {
     margin-top: 0em; /* Отступ сверху */
     margin-bottom: 0em; /* Отступ снизу */
    }
-  </style>
-_END;
+</style>
 
-    //$vm_id_tovar = $_POST['vm_id_tovar'];
-    //$u_count = $_POST['u_count'];
-	//echo "sfdsd=" . $vm_id_tovar;
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
 
+   $('[id*=but1_]').click(function(){
+   var id=$(this).attr('id');
+   var prefix=id.substring(id.indexOf("_")+1);
+   var vm_id_tovar = $('#id_tovar_'+prefix).val();
+   var id_tovar_order = $('#id_tovar_order_'+prefix).val();
+   var u_count = $('#count_'+prefix).val();
+    $.ajax({
+		type:"POST",
+		url:"vm-count-update.php",
+        data:"vm_id_tovar=" + vm_id_tovar + "&u_count=" + u_count + "&id_tovar_order="+id_tovar_order,
+        success:function(result){
+        	$('#par1_'+prefix).html(result)
+			$('#'+id).fadeOut(1000);
+			$('#tovar_'+prefix + ' #chk_oprih_vm').attr("checked", true);
+			/*alert('#'+id + ' Код товра='+ vm_id_tovar + ' Кол-во товара=' + u_count)*/},
+		error: function(){
+        alert('error')
+		}
+      });
+	return false;
+   });
+});
+
+$(document).ready(function(){
+
+   $('[id*=but2_]').click(function(){
+   var id=$(this).attr('id');
+   var prefix=id.substring(id.indexOf("_")+1);
+   var id_tovar_order = $('#id_tovar_order_'+prefix).val();
+   var u_count = $('#count_'+prefix).val();
+    $.ajax({
+		type:"POST",
+		url:"count-update.php",
+        data:"id_tovar_order=" + id_tovar_order + "&u_count=" + u_count,
+        success:function(result){
+			/*alert('#'+id + ' Код товра='+ $('#sum_'+prefix).html() + ' Кол-во товара=' + $('#count_partiy_'+prefix).html() + ' Произведение' + $('#sum_'+prefix).html()*$('#count_partiy_'+prefix).html()/u_count)*/
+			$('#price_'+prefix).html(number_format($('#sum_'+prefix).html()*$('#count_partiy_'+prefix).html()/u_count, 2, '.', ' '))
+        	/*$('#par1_'+prefix).html(result)
+			alert('#'+id + ' Код товра='+ id_tovar_order + ' Кол-во товара=' + u_count)*/},
+		error: function(){
+        alert('error')
+		}
+      });
+	return false;
+   });
+});
+
+// Кнопка обновить статус
+$(document).ready(function(){
+
+    $('[id*=but3_]').click(function(){
+        var id=$(this).attr('id');
+        var prefix=id.substring(id.indexOf("_")+1);
+        var find_order = $('#tovar_'+prefix + ' #find_order').val();
+        var id_ali = $('#tovar_'+prefix + ' #id_ali').val();
+        $.ajax({
+            type:"POST",
+            url:"/tovarlist/load_status/",
+            data:"find_order=" + find_order + "&id_ali=" + id_ali,
+            success:function(result){
+                $('#tovar_'+prefix + ' #par3').html(result)
+                /*$('#'+id).fadeOut(1000);
+                $('#tovar_'+prefix + ' #chk_oprih_vm').attr("checked", true);
+                alert('#'+id + ' find_order='+ find_order + ' id_ali=' + id_ali)*/},
+            error: function(){
+                alert('error')
+            }
+        });
+        return false;
+    });
+});
+
+function number_format(number, decimals, dec_point, thousands_sep) {
+  number = (number + '').replace(/[^0-9+\-Ee.]/g, '');
+  var n = !isFinite(+number) ? 0 : +number,
+    prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
+    sep = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep,
+    dec = (typeof dec_point === 'undefined') ? '.' : dec_point,
+    s = '',
+    toFixedFix = function(n, prec) {
+      var k = Math.pow(10, prec);
+      return '' + (Math.round(n * k) / k)
+        .toFixed(prec);
+    };
+  // Fix for IE parseFloat(0.55).toFixed(0) = 0;
+  s = (prec ? toFixedFix(n, prec) : '' + Math.round(n))
+    .split('.');
+  if (s[0].length > 3) {
+    s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
+  }
+  if ((s[1] || '')
+    .length < prec) {
+    s[1] = s[1] || '';
+    s[1] += new Array(prec - s[1].length + 1)
+      .join('0');
+  }
+  return s.join(dec);
+}
+
+</script>
+
+
+<?php
+//header('Content-type: text/html; charset=utf-8');
+ini_set("max_execution_time", "120"); //увеличиваем допустимое время выполнения скрипта
 
 //////////////////////////////////////////Присваиваем перемменным значения сессии
-$filtr_AllRecord = htmlspecialchars($_SESSION['filtr_AllRecord']);
-$filtr_tovar = htmlspecialchars($_SESSION['filtr_tovar']);
-$filtr_order = htmlspecialchars($_SESSION['filtr_order']);
-$filtr_begin_date = htmlspecialchars($_SESSION['filtr_begin_date']);
-$filtr_end_date = htmlspecialchars($_SESSION['filtr_end_date']);
+(isset($_SESSION["filtr_AllRecord"])    ? $filtr_AllRecord = htmlspecialchars($_SESSION['filtr_AllRecord']) : $filtr_AllRecord = 1); //по умолчанию выводим первые 100 записей, что бы не нагружать запрос
+(isset($_SESSION["filtr_tovar"])        ? $filtr_tovar = htmlspecialchars($_SESSION['filtr_tovar']) : $filtr_tovar="");
+(isset($_SESSION["filtr_order"])        ? $filtr_order = htmlspecialchars($_SESSION['filtr_order']) : $filtr_order="");
+(isset($_SESSION["filtr_begin_date"])   ? $filtr_begin_date = htmlspecialchars($_SESSION['filtr_begin_date']) : $filtr_begin_date="");
+(isset($_SESSION["filtr_end_date"])     ? $filtr_end_date = htmlspecialchars($_SESSION['filtr_end_date']) : $filtr_end_date="");
 
 
 /////////////////////////////////////////// Форма фильтра ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -133,12 +229,11 @@ _END;
 		echo "</td>";
         echo "<td>$row[status]";
         echo <<<_END
-        <form name="update_status" action="/tovarlist/load_status/" method="post">
-            <input type="hidden" name="id_tovar_order" value=$row[id_tovar_order]>
-            <input type="hidden" name="find_order" value=$row[namber_order]>
-			<input type="hidden" name="id_ali" value=$row[id_ali]>
-            <input type="submit" name="refresh_status" value="Об-ть статус"></td>
-        </form>
+        <input type="hidden" name="id_tovar_order" value=$row[id_tovar_order]>
+        <input id="find_order" type="hidden" name="find_order" value=$row[namber_order]>
+		<input id="id_ali" type="hidden" name="id_ali" value=$row[id_ali]>
+        <input id="but3_$j" type="button" value="Об-ть статус">
+        <p id='par3'></p></td>
 _END;
 
         If ($row["status_otmeni"]=="Открыть спор") {
@@ -168,17 +263,5 @@ function get_post($var)
 {
     return mysql_real_escape_string($_POST[$var]);
 }
-
-
-/*function fOrder ($find_order,$namber_order) 
-{
-if (!empty($find_order)):
-		return $find_order;
-	elseif (!empty($namber_order)):
-		return $namber_order;
-	else:
-		return null;
-endif;
-}*/
 
 ?>

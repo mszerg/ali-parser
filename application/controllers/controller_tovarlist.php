@@ -100,7 +100,7 @@ class Controller_Tovarlist extends Controller
 		//echo "namber_order = " . $namber_order . " id = " . $id_ali;
 
         $result = $this->get_web_page("http://trade.aliexpress.com/order_detail.htm?orderId=$namber_order",$id_ali);
-        echo $result['errno'];
+        //echo $result['errno'];
         if (($result['errno'] != 0 )||($result['http_code'] != 200))
         {
             echo $result['errmsg'];
@@ -108,15 +108,15 @@ class Controller_Tovarlist extends Controller
         else
         {
             $page = $result['content'];
-            echo "Загружаю страницу </br>";
+        //    echo "Загружаю страницу </br>";
         //    echo $page;
             $html = str_get_html($page);
-            $str_status = trim($html->find('.order-status', 0)->plaintext);
+            (is_object($html->find('.order-status', 0)) ? $str_status=trim($html->find('.order-status', 0)->plaintext) : $str_status="");
             if (!empty($str_status)) {
                 //echo "load status - " . $namber_order;
-                echo  <<<_END
+                /*echo  <<<_END
 			load status - <a href="http://trade.aliexpress.com/order_detail.htm?orderId=$namber_order" target="_blank" data-spm-anchor-id="0.0.0.0">$namber_order</a></br>
-_END;
+_END;*/
                 //$str_magazine= $html->find('.user-name-text', 0)->outertext;
                 $str_tracknumber= trim($html->find('td[class=no]', 0)->plaintext);
 
@@ -146,10 +146,11 @@ _END;
                         echo "Update failed: $query<br>" . mysql_error() . "<br><br>";*/
                     $this->model->update_data($query);
                 }
+                echo "Удачно, об-те стр-цу";
             }
             else
             {
-                echo "Статус заказа пустой, скорее всего не обновлены куки";
+                echo "Ошибка, обновите куки";
             }
         }
     }
@@ -173,9 +174,9 @@ _END;
         //curl_setopt($ch, CURLOPT_CAINFO, "./cacert.pem");
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         if ($id_ali == 1) {
-            curl_setopt($ch, CURLOPT_COOKIEFILE,$_SERVER[DOCUMENT_ROOT]."/cookies/Leonid/cookies.txt");
+            curl_setopt($ch, CURLOPT_COOKIEFILE,$_SERVER['DOCUMENT_ROOT']."/cookies/Leonid/cookies.txt");
         } elseif ($id_ali == 2) {
-            curl_setopt($ch, CURLOPT_COOKIEFILE,$_SERVER[DOCUMENT_ROOT]."/cookies/Dmitriy/cookies.txt");
+            curl_setopt($ch, CURLOPT_COOKIEFILE,$_SERVER['DOCUMENT_ROOT']."/cookies/Dmitriy/cookies.txt");
         }
         //curl_setopt($ch, CURLOPT_COOKIEFILE,$_SERVER[DOCUMENT_ROOT]."/cookies.txt");
         //curl_setopt($curl, CURLOPT_COOKIE, "xman_t=Nhp88qU1tdk8j7dPsWtlfxRQVsBhJ7Nww6/TM6gdHWZkvSJXXZ9J6OdA2QT3HKxhQKWSkzVb6lU+PzMvlHMNcaJN0uOPRXZdqThhMRaRl/vUtP1OyUhoUsTFdk2oatrw5ADxZGl3jCigGQKS6W21kXOIYgsPGt26WdX53KDpNcscpme2qOyGdPa0psn1oHWEmasrKsoIgHRu5D05dqObvK55qhntZEtYwycuYq/Z2DU4KplSZeDyOxW6M05iYEX/Rw32VyIU9wNJlu/OZjD+WcQuSiP4daQMCZ9nblWf+mgSWk4V1ux+l2c0/sfFj0oQO1ZsxV2wRImnwvZejG1BKkABHwdelmks0q+gS9fIrOFjL2e9DH9hZNrhqbkdWWwEM2g34oWgjWs3OkXWSjUciriX3b6HQTD9SBtr+btSSvA/v8Y7hKwvfAN2Vs+MhzWSbB/lbEgN6uI9uun70lw1rPqD3tDAg0Hn404AuW0XelOXI4xoStuRMPtqew7VuaiGpeACrVVRW8/DhSvuuhYAYL4kS8zILJXpnaNyyVchUEeuxZLNFjgtOgoR6T6LjRsEIX3XKtMimvm8VJ7pxAM0AXx/f6XaonA0yiRki6bdSGAEu3KPxBwr/cM9fCnT+MRq");
