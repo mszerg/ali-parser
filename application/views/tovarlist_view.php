@@ -17,7 +17,7 @@ $(document).ready(function(){
    var u_count = $('#count_'+prefix).val();
     $.ajax({
 		type:"POST",
-		url:"vm-count-update.php",
+		url:"/tovarlist/vm_count_update/",
         data:"vm_id_tovar=" + vm_id_tovar + "&u_count=" + u_count + "&id_tovar_order="+id_tovar_order,
         success:function(result){
         	$('#par1_'+prefix).html(result)
@@ -41,7 +41,7 @@ $(document).ready(function(){
    var u_count = $('#count_'+prefix).val();
     $.ajax({
 		type:"POST",
-		url:"count-update.php",
+		url:"/tovarlist/count_update/",
         data:"id_tovar_order=" + id_tovar_order + "&u_count=" + u_count,
         success:function(result){
 			/*alert('#'+id + ' Код товра='+ $('#sum_'+prefix).html() + ' Кол-во товара=' + $('#count_partiy_'+prefix).html() + ' Произведение' + $('#sum_'+prefix).html()*$('#count_partiy_'+prefix).html()/u_count)*/
@@ -73,6 +73,25 @@ $(document).ready(function(){
                 /*$('#'+id).fadeOut(1000);
                 $('#tovar_'+prefix + ' #chk_oprih_vm').attr("checked", true);
                 alert('#'+id + ' find_order='+ find_order + ' id_ali=' + id_ali)*/},
+            error: function(){
+                alert('error')
+            }
+        });
+        return false;
+    });
+});
+
+// Кнопка обновить статус по всем заказам
+$(document).ready(function(){
+
+    $('#Refresh_All_Status').click(function(){
+        $.ajax({
+            url:"/tovarlist/update_all_status/",
+            success:function(result){
+                $('#par4').html(result)
+                /*$('#'+id).fadeOut(1000);
+                $('#tovar_'+prefix + ' #chk_oprih_vm').attr("checked", true);
+                alert(result)*/},
             error: function(){
                 alert('error')
             }
@@ -113,20 +132,21 @@ function number_format(number, decimals, dec_point, thousands_sep) {
 
 <?php
 //header('Content-type: text/html; charset=utf-8');
-ini_set("max_execution_time", "120"); //увеличиваем допустимое время выполнения скрипта
+
 
 //////////////////////////////////////////Присваиваем перемменным значения сессии
 (isset($_SESSION["filtr_AllRecord"])    ? $filtr_AllRecord = htmlspecialchars($_SESSION['filtr_AllRecord']) : $filtr_AllRecord = 1); //по умолчанию выводим первые 100 записей, что бы не нагружать запрос
-(isset($_SESSION["filtr_tovar"])        ? $filtr_tovar = htmlspecialchars($_SESSION['filtr_tovar']) : $filtr_tovar="");
-(isset($_SESSION["filtr_order"])        ? $filtr_order = htmlspecialchars($_SESSION['filtr_order']) : $filtr_order="");
-(isset($_SESSION["filtr_begin_date"])   ? $filtr_begin_date = htmlspecialchars($_SESSION['filtr_begin_date']) : $filtr_begin_date="");
-(isset($_SESSION["filtr_end_date"])     ? $filtr_end_date = htmlspecialchars($_SESSION['filtr_end_date']) : $filtr_end_date="");
+(isset($_SESSION["filtr_tovar"])        ? $filtr_tovar = htmlspecialchars($_SESSION['filtr_tovar']) 			: $filtr_tovar="");
+(isset($_SESSION["filtr_order"])        ? $filtr_order = htmlspecialchars($_SESSION['filtr_order']) 			: $filtr_order="");
+(isset($_SESSION["filtr_begin_date"])   ? $filtr_begin_date = htmlspecialchars($_SESSION['filtr_begin_date']) 	: $filtr_begin_date="");
+(isset($_SESSION["filtr_end_date"])     ? $filtr_end_date = htmlspecialchars($_SESSION['filtr_end_date']) 		: $filtr_end_date="");
 
 
 /////////////////////////////////////////// Форма фильтра ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 if ($filtr_AllRecord==2) $str_AllRecord = '<input type="radio" name="AllRecord" id="AllRecord1" value=1 /><label for="AllRecord1">Последние 100 записей</label> <input type="radio" checked="checked" name="AllRecord" id="AllRecord2" value=2 /><label for="AllRecord2">Все записи&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</label>';
 else $str_AllRecord = '<input type="radio" checked="checked" name="AllRecord" id="AllRecord1" value=1 /><label for="AllRecord1">Последние 100 записей</label> <input type="radio" name="AllRecord" id="AllRecord2" value=2 /><label for="AllRecord2">Все записи&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</label>';
+
 
 //echo($_POST["AllRecord"]);
 
@@ -142,35 +162,14 @@ echo <<<_END
             <td colspan="2">
                 <input type="submit" name="filter" value="Фильтр" />
 				<input type="submit" name="delfilter" value="Удалить Фильтр" />
-				<input type="submit" name="RefreshAllStatus" value="Обновить всем статус" />
+				<input id = "Refresh_All_Status" type="button" name="RefreshAllStatus" value="Обновить всем статус" />
             </td>
         </tr>
     </table>
 </form>
 _END;
 
-		///////////////////////////////////// Отрабатывем кнопку обновить статус
-		//if (!empty($_POST["refresh_status"])) load_status($_POST['find_order'],$db_server,$_POST['id_ali']);
-        //if (!empty($_POST["refresh_status"])) require_once 'library/simple_html_dom.php';
-
-		////////////////////////////////////// Отрабатывваем кнопку Обновить всем статус
-		if (isset($_POST['RefreshAllStatus']))
-		{
-			//$query = "SELECT tbl_order.id_ali, tbl_order.namber_order FROM tbl_order WHERE (((tbl_order.status)<>'Завершено' And (tbl_order.status)<>'Закрыт') AND ((tbl_order.date_order2)<' 	2015-12-27'));";
-			$query = "SELECT tbl_order.id_ali, tbl_order.namber_order FROM tbl_order WHERE (((tbl_order.status)<>'Завершено' And (tbl_order.status)<>'Закрыт'));";
-			$result = mysql_query($query);
-				if (!mysql_query($query, $db_server))
-				echo "Update failed: $query<br>" .
-					mysql_error() . "<br><br>";
-			$rows = mysql_num_rows($result);
-
-			for ($j = 0 ; $j < $rows ; ++$j)
-			{
-				$row = mysql_fetch_assoc($result);
-					echo "Номер заказа $row[namber_order] </br>";
-					load_status($row[namber_order],$db_server,$row['id_ali']);
-			}
-		}
+echo "<p id='par4'></p>";
 
 //////////////////////////////////// Отрисовывем главную таблицу
 //$result = mysql_query($sql);
