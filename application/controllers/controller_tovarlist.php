@@ -46,4 +46,18 @@ class Controller_Tovarlist extends Controller
 		$this->model->count_update();
     }
 
+    function action_get_vm_tovar()
+    {
+        $this->model->get_vm_tovar ();
+    }
+
+    function action_update_vm_tovar()
+    {
+        $this->model->update_vm_tovar();
+    }
+
+    function action_update_vm_tovar_null()
+    {
+        $this->model->update_vm_tovar_null();
+    }
 }

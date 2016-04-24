@@ -19,7 +19,8 @@ Modified by VitalySwipe
 		<title>Ali</title>
 		<link href="http://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css" />
 		<link href="http://fonts.googleapis.com/css?family=Kreon" rel="stylesheet" type="text/css" />
-		<link rel="stylesheet" type="text/css" href="/css/style.css" />
+
+
 	</head>
 	<body>
 		<div id="wrapper">

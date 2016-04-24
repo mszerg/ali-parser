@@ -5,137 +5,28 @@
    }
 </style>
 
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/css/style.css" />
+<link rel="stylesheet" type="text/css" href="../../jquery-easyui-1.4.5/themes/default/easyui.css">
+<link rel="stylesheet" type="text/css" href="../../jquery-easyui-1.4.5/themes/icon.css">
+<link rel="stylesheet" type="text/css" href="../../jquery-easyui-1.4.5/demo/demo.css">
+<script type="text/javascript" src="../../jquery-easyui-1.4.5/jquery.min.js"></script>
+<script type="text/javascript" src="../../jquery-easyui-1.4.5/jquery.easyui.min.js"></script>
+
+<script type="text/javascript" src="../../js/jquery.scannerdetection.js"></script>
+
+<script type="text/javascript" src="/js/tovar_view_button.js"></script>
+
 <script type="text/javascript">
-$(document).ready(function(){
-
-   $('[id*=but1_]').click(function(){
-   var id=$(this).attr('id');
-   var prefix=id.substring(id.indexOf("_")+1);
-   var vm_id_tovar = $('#id_tovar_'+prefix).val();
-   var id_tovar_order = $('#id_tovar_order_'+prefix).val();
-   var u_count = $('#count_'+prefix).val();
-    $.ajax({
-		type:"POST",
-		url:"/tovarlist/vm_count_update/",
-        data:"vm_id_tovar=" + vm_id_tovar + "&u_count=" + u_count + "&id_tovar_order="+id_tovar_order,
-        success:function(result){
-        	$('#par1_'+prefix).html(result)
-			$('#'+id).fadeOut(1000);
-			$('#tovar_'+prefix + ' #chk_oprih_vm').attr("checked", true);
-			/*alert('#'+id + ' Код товра='+ vm_id_tovar + ' Кол-во товара=' + u_count)*/},
-		error: function(){
-        alert('error')
-		}
-      });
-	return false;
-   });
-});
-
-$(document).ready(function(){
-
-   $('[id*=but2_]').click(function(){
-   var id=$(this).attr('id');
-   var prefix=id.substring(id.indexOf("_")+1);
-   var id_tovar_order = $('#id_tovar_order_'+prefix).val();
-   var u_count = $('#count_'+prefix).val();
-    $.ajax({
-		type:"POST",
-		url:"/tovarlist/count_update/",
-        data:"id_tovar_order=" + id_tovar_order + "&u_count=" + u_count,
-        success:function(result){
-			/*alert('#'+id + ' Код товра='+ $('#sum_'+prefix).html() + ' Кол-во товара=' + $('#count_partiy_'+prefix).html() + ' Произведение' + $('#sum_'+prefix).html()*$('#count_partiy_'+prefix).html()/u_count)*/
-			$('#price_'+prefix).html(number_format($('#sum_'+prefix).html()*$('#count_partiy_'+prefix).html()/u_count, 2, '.', ' '))
-        	/*$('#par1_'+prefix).html(result)
-			alert('#'+id + ' Код товра='+ id_tovar_order + ' Кол-во товара=' + u_count)*/},
-		error: function(){
-        alert('error')
-		}
-      });
-	return false;
-   });
-});
-
-// Кнопка обновить статус
-$(document).ready(function(){
-
-    $('[id*=but3_]').click(function(){
-        var id=$(this).attr('id');
-        var prefix=id.substring(id.indexOf("_")+1);
-        var find_order = $('#tovar_'+prefix + ' #find_order').val();
-        var id_ali = $('#tovar_'+prefix + ' #id_ali').val();
-        $.ajax({
-            type:"POST",
-            url:"/tovarlist/load_status/",
-            data:"find_order=" + find_order + "&id_ali=" + id_ali,
-            success:function(result){
-                $('#tovar_'+prefix + ' #par3').html(result)
-                /*$('#'+id).fadeOut(1000);
-                $('#tovar_'+prefix + ' #chk_oprih_vm').attr("checked", true);
-                alert('#'+id + ' find_order='+ find_order + ' id_ali=' + id_ali)*/},
-            error: function(){
-                alert('error')
-            }
-        });
-        return false;
-    });
-});
-
-// Кнопка обновить статус по всем заказам
-$(document).ready(function(){
-
-    $('#Refresh_All_Status').click(function(){
-        $.ajax({
-            url:"/tovarlist/update_all_status/",
-            success:function(result){
-                $('#par4').html(result)
-                /*$('#'+id).fadeOut(1000);
-                $('#tovar_'+prefix + ' #chk_oprih_vm').attr("checked", true);
-                alert(result)*/},
-            error: function(){
-                alert('error')
-            }
-        });
-        return false;
-    });
-});
-
-function number_format(number, decimals, dec_point, thousands_sep) {
-  number = (number + '').replace(/[^0-9+\-Ee.]/g, '');
-  var n = !isFinite(+number) ? 0 : +number,
-    prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
-    sep = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep,
-    dec = (typeof dec_point === 'undefined') ? '.' : dec_point,
-    s = '',
-    toFixedFix = function(n, prec) {
-      var k = Math.pow(10, prec);
-      return '' + (Math.round(n * k) / k)
-        .toFixed(prec);
-    };
-  // Fix for IE parseFloat(0.55).toFixed(0) = 0;
-  s = (prec ? toFixedFix(n, prec) : '' + Math.round(n))
-    .split('.');
-  if (s[0].length > 3) {
-    s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
-  }
-  if ((s[1] || '')
-    .length < prec) {
-    s[1] = s[1] || '';
-    s[1] += new Array(prec - s[1].length + 1)
-      .join('0');
-  }
-  return s.join(dec);
-}
-
+    $(document).scannerDetection(function(data){$('#tracknumber').val(data);});
 </script>
-
 
 <?php
 //header('Content-type: text/html; charset=utf-8');
 
 
 //////////////////////////////////////////Присваиваем перемменным значения сессии
-(isset($_SESSION["filtr_AllRecord"])    ? $filtr_AllRecord = htmlspecialchars($_SESSION['filtr_AllRecord']) : $filtr_AllRecord = 1); //по умолчанию выводим первые 100 записей, что бы не нагружать запрос
+(isset($_SESSION["filtr_tracknumber"])  ? $filtr_tracknumber = htmlspecialchars($_SESSION['filtr_tracknumber']) : $filtr_tracknumber="");
+(isset($_SESSION["filtr_AllRecord"])    ? $filtr_AllRecord = htmlspecialchars($_SESSION['filtr_AllRecord'])     : $filtr_AllRecord = 1); //по умолчанию выводим первые 100 записей, что бы не нагружать запрос
 (isset($_SESSION["filtr_tovar"])        ? $filtr_tovar = htmlspecialchars($_SESSION['filtr_tovar']) 			: $filtr_tovar="");
 (isset($_SESSION["filtr_order"])        ? $filtr_order = htmlspecialchars($_SESSION['filtr_order']) 			: $filtr_order="");
 (isset($_SESSION["filtr_begin_date"])   ? $filtr_begin_date = htmlspecialchars($_SESSION['filtr_begin_date']) 	: $filtr_begin_date="");
@@ -155,6 +46,7 @@ echo <<<_END
     <table>
         <tr>
 			<td>$str_AllRecord</td>
+			<td>Трек   <input id="tracknumber" type="text" name="find_tracknumber" value = $filtr_tracknumber></td>
             <td>Заказ   <input type="text" name="find_order" value = $filtr_order></td>
             <td>Нач дата (ДД.ММ.ГГГГ)<input type="text" name="begin_date" value = $filtr_begin_date></td>
             <td>Кон дата (ДД.ММ.ГГГГ)<input type="text" name="end_date" value = $filtr_end_date></td>
@@ -204,7 +96,40 @@ _END;
         echo "<td>" . date("d.m.Y", $row["date_order"]) . "</td>";
         echo "<td><img src=\"image.php?id=" . $row["id_tovar_order"] . "\" alt=\"\" /></td>";
         echo "<td>$row[name]</td>";
-		echo "<td>$row[NameVirtuemart]</td>";
+		echo "<td>
+                <input id=\"cc\" class=\"easyui-combobox\" name=\"dept\" value='$row[id_virtuemart]'
+                data-options = \"valueField:'virtuemart_product_id',
+                               textField:'product_name',
+                               url:'/tovarlist/get_vm_tovar',
+                               icons:[{
+                               iconCls:'icon-save'
+                                    },{
+                               iconCls:'icon-cancel',handler:function(){
+                                        $.ajax({
+                                            type:'POST',
+                                            url:'/tovarlist/update_vm_tovar_null/',
+                                            data:'ali_id_tovar=' +" . $row['ali_id_tovar'] . ",
+                                            success:function(result){
+                                                 /*alert(result)*/},
+                                            error: function(){
+                                                 alert('error')
+                                                }
+                                            });
+                                        }
+                                    }],
+                               onSelect:function(rec){
+                                    $.ajax({
+                                    type:'POST',
+                                    url:'/tovarlist/update_vm_tovar/',
+                                    data:'newValue=' + rec.virtuemart_product_id + '&product_name=' + rec.product_name + '&ali_id_tovar=' +" . $row['ali_id_tovar'] . ",
+                                    success:function(result){
+                                         /*alert(result)*/},
+                                    error: function(){
+                                         alert('error')
+                                        }
+                                    });
+                                }\">
+            </td>";
 		echo "<td><a href=\"http://ru.aliexpress.com/store/$row[ali_id_store]\">$row[store]</a></td>";
         echo "<td id='sum_$j'>$row[price]</td>";
         echo "<td id='count_partiy_$j'>$row[count_partiy]</td>";

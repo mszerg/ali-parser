@@ -29,28 +29,31 @@ class Model_Tovarlist extends Model
 	
 		///////////////////////////////////////////Запоминаем данные в сессию
 		//session_start();
-        if (isset($_POST['AllRecord']))     $_SESSION['filtr_AllRecord'] = $_POST['AllRecord'];
-        if (isset($_POST['find_tovar']))    $_SESSION['filtr_tovar'] = $_POST['find_tovar'];
-		//if (empty($_POST["refresh_count"])) $_SESSION['filtr_order'] = fOrder($_POST["find_order"],$_POST["namber_order"]);
-		if (isset($_POST["find_order"]))    $_SESSION['filtr_order'] = $_POST["find_order"];
-        if (isset($_POST['begin_date']))    $_SESSION['filtr_begin_date'] = $_POST["begin_date"];
-        if (isset($_POST['end_date']))      $_SESSION['filtr_end_date'] = $_POST["end_date"];
+
+        if (isset($_POST['AllRecord']))         $_SESSION['filtr_AllRecord'] = $_POST['AllRecord'];
+        if (isset($_POST['find_tracknumber']))  $_SESSION['filtr_tracknumber'] = $_POST['find_tracknumber'];
+        if (isset($_POST['find_tovar']))        $_SESSION['filtr_tovar'] = $_POST['find_tovar'];
+		if (isset($_POST["find_order"]))        $_SESSION['filtr_order'] = $_POST["find_order"];
+        if (isset($_POST['begin_date']))        $_SESSION['filtr_begin_date'] = $_POST["begin_date"];
+        if (isset($_POST['end_date']))          $_SESSION['filtr_end_date'] = $_POST["end_date"];
 
 		/////////////////////////////////////////// Обнуляем сессию если нажата кнопка Удалить фильтр
 		if (isset($_POST["delfilter"])) {
-		$_SESSION['filtr_AllRecord']="";
-		$_SESSION['filtr_tovar'] = "";
-		$_SESSION['filtr_order'] = "";
-		$_SESSION['filtr_begin_date'] = "";
-		$_SESSION['filtr_end_date'] = "";
+            $_SESSION['filtr_AllRecord']="";
+            $_SESSION['filtr_tracknumber']="";
+            $_SESSION['filtr_tovar'] = "";
+            $_SESSION['filtr_order'] = "";
+            $_SESSION['filtr_begin_date'] = "";
+            $_SESSION['filtr_end_date'] = "";
 		}
 
-		//////////////////////////////////////////Присваиваем перемменным значения сессии
-        (isset($_SESSION["filtr_AllRecord"])    ? $filtr_AllRecord = htmlspecialchars($_SESSION['filtr_AllRecord']) : $filtr_AllRecord = 1); //по умолчанию выводим первые 100 записей, что бы не нагружать запрос
-        (isset($_SESSION["filtr_tovar"])        ?  $filtr_tovar = htmlspecialchars($_SESSION['filtr_tovar']) : $filtr_tovar="");
-        if (isset($_SESSION["filtr_order"]))        $filtr_order = htmlspecialchars($_SESSION['filtr_order']);
-        if (isset($_SESSION["filtr_begin_date"]))   $filtr_begin_date = htmlspecialchars($_SESSION['filtr_begin_date']);
-        if (isset($_SESSION["filtr_end_date"]))     $filtr_end_date = htmlspecialchars($_SESSION['filtr_end_date']);
+//////////////////////////////////////////Присваиваем перемменным значения сессии
+        (isset($_SESSION["filtr_tracknumber"])  ? $filtr_tracknumber = htmlspecialchars($_SESSION['filtr_tracknumber']) : $filtr_tracknumber="");
+        (isset($_SESSION["filtr_AllRecord"])    ? $filtr_AllRecord = htmlspecialchars($_SESSION['filtr_AllRecord'])     : $filtr_AllRecord = 1); //по умолчанию выводим первые 100 записей, что бы не нагружать запрос
+        (isset($_SESSION["filtr_tovar"])        ? $filtr_tovar = htmlspecialchars($_SESSION['filtr_tovar']) 			: $filtr_tovar="");
+        (isset($_SESSION["filtr_order"])        ? $filtr_order = htmlspecialchars($_SESSION['filtr_order']) 			: $filtr_order="");
+        (isset($_SESSION["filtr_begin_date"])   ? $filtr_begin_date = htmlspecialchars($_SESSION['filtr_begin_date']) 	: $filtr_begin_date="");
+        (isset($_SESSION["filtr_end_date"])     ? $filtr_end_date = htmlspecialchars($_SESSION['filtr_end_date']) 		: $filtr_end_date="");
 
         // Главный запрос на выборку без Where и Order by
         $sql  = "SELECT tbl_order_user.*, tbl_order.*, tbl_order_tovar.*, tbl_tovar.id_virtuemart, tbl_tovar.NameVirtuemart
@@ -59,6 +62,7 @@ class Model_Tovarlist extends Model
         //Добавляем условия к основному запросу в при нажатии разных кнопок
         if (!empty($_POST["filter"]) or !empty($_POST["filtr_by_order"]) or !empty($_POST["u_count"]) or !empty($_POST["refresh_status"]) or !empty($_POST['vm_update_count'])) {
             $where = "";
+            if (!empty($filtr_tracknumber)) $where = $this->addWhere($where, "`tracknumber` = '".htmlspecialchars($_POST["find_tracknumber"]))."'";
             if (!empty($_POST["begin_date"])) $where = $this->addWhere($where, "`date_order` >= '".htmlspecialchars(strtotime($_POST["begin_date"])))."'";
             if (!empty($_POST["end_date"])) $where = $this->addWhere($where, "`date_order` <= '".htmlspecialchars(strtotime($_POST["end_date"] . '23:59:59')))."'";
             if (!empty($filtr_order)) $where = $this->addWhere($where, "`tbl_order`.`namber_order` = '" . htmlspecialchars($filtr_order) . "'");
@@ -98,7 +102,7 @@ class Model_Tovarlist extends Model
         if ($filtr_AllRecord != 2) {
             $sql = $sql . " LIMIT 100";
         }
-        //echo $sql;
+        echo $sql;
         $result = mysql_query($sql);
         $arr = array();
         //echo $sql . "</br>". "</br>";
@@ -210,8 +214,59 @@ _END;*/
 
 		else echo "Ошибка";
 	}
-	
-	private function get_post($var)
+
+    /**
+     *Справочник товара из virtuemart в json формате. Подставляется в сombobox
+     */
+    function get_vm_tovar()
+    {
+        $sql="SELECT mszerg_autohome.v3t_virtuemart_products_ru_ru.virtuemart_product_id, mszerg_autohome.v3t_virtuemart_products_ru_ru.product_name FROM mszerg_autohome.v3t_virtuemart_products_ru_ru";
+        $result = mysql_query($sql);
+        //$json_data = mysql_fetch_array($result);
+        $arr = array();
+        while ( $json_data = mysql_fetch_assoc($result) ) $arr[] = $json_data;
+        echo json_encode($arr);
+    }
+
+    /**
+     *Обновление товра в таблице tbl_tovar при изменении в сombobox
+     */
+    function update_vm_tovar()
+    {
+        //$newValue = $this->get_post('newValue');
+        $query = "UPDATE tbl_tovar SET id_virtuemart = " . $this->get_post('newValue') . ", tbl_tovar.NameVirtuemart = \"" . $this->get_post('product_name')  . "\" WHERE (((tbl_tovar.id_import)=" . $this->get_post('ali_id_tovar') . "))";
+        //echo $query;
+		if (!mysql_query($query)) echo "Update failed: $query<br>" . mysql_error() . "<br><br>";
+
+    }
+
+    /**
+     *Обнуление товра в таблице tbl_tovar при нажатии крестика (отмена) в сombobox
+     */
+    function update_vm_tovar_null()
+    {
+         $query = "UPDATE tbl_tovar SET id_virtuemart = 0, tbl_tovar.NameVirtuemart = NULL WHERE (((tbl_tovar.id_import)=" . $this->get_post('ali_id_tovar') . "))";
+        //echo $query;
+        if (!mysql_query($query)) echo "Update failed: $query<br>" . mysql_error() . "<br><br>";
+
+    }
+
+    /**
+     *Получение имени товар virtuemart по id
+     *Подставляем в update_vm_tovar()
+     */
+   /* function get_vm_name_tovar($id_vm_tovar)
+    {
+        $sql="SELECT mszerg_autohome.v3t_virtuemart_products_ru_ru.product_name FROM mszerg_autohome.v3t_virtuemart_products_ru_ru WHERE mszerg_autohome.v3t_virtuemart_products_ru_ru.virtuemart_product_id=$id_vm_tovar";
+        $result = mysql_query($sql);
+        $row=mysql_fetch_assoc($result);
+
+        return $row['product_name'];
+    }*/
+
+
+
+    private function get_post($var)
 		{
 			return mysql_real_escape_string($_POST[$var]);
 		}
