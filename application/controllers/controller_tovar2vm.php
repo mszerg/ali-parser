@@ -36,4 +36,8 @@ class Controller_Tovar2vm extends Controller
         $this->model->add_rec();
     }
 
+    function action_parser_picture()
+    {
+        $this->model->parser_picture();
+    }
 }

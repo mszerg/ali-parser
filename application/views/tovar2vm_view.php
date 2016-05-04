@@ -13,10 +13,18 @@ echo "<table border=\"1\"><tr><td>Наименование</td><td>Содерж�
 echo "<tr><td>id_tovar_order</td><td>$data[id_tovar_order]</td></tr>";
 echo "<tr><td>date_order</td><td>" . date('d.m.Y', $data['date_order']). "</td></tr>";
 echo "<tr><td>Фотография</td><td><img src=\"/image.php?id=" . $data["id_tovar_order"] . "\" alt=\"\" /></td></tr>";
+
+echo "<form name='parser' action='/tovar2vm/parser_picture' method='post'>";
+echo "<tr><td>snapshot_num</td><td><input type='text' name='snapshot_num' value='$data[snapshot_num]' /></td>
+			<tr><td>namber_order</td><td><input type='text' name='namber_order' value='$data[namber_order]' /></td>
+			<tr><td>Сохранить фото с ali</td><td><input type='submit' name='ParserPicture' />
+			</td></tr>";
+echo "</form>";
+
 echo "<tr><td>name</td><td>$data[name]</td></tr>";
 echo "<form name='form' action='/tovar2vm/add_rec' method='post'>";
     echo "<tr><td>product_s_desc</td><td><input class='inputtext' type='text' name='product_s_desc' value='$data[product_s_desc]' /></td>
-			<tr><td>product_name</td><td><input class='inputtext'type='text' name='product_name' value='$data[product_name]' /></td>
+			<tr><td>product_name</td><td><input class='inputtext' type='text' name='product_name' value='$data[product_name]' /></td>
 			<tr><td>metadesc</td><td><input class='inputtext' type='text' name='metadesc' value='$data[metadesc]' />
 			<tr><td>metakey</td><td><input class='inputtext' type='text' name='metakey' value='$data[metakey]' />
 			<tr><td>customtitle</td><td><input class='inputtext' type='text' name='customtitle' value='$data[customtitle]' />

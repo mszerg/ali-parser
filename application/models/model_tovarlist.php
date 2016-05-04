@@ -162,7 +162,15 @@ _END;*/
                     $txt_snapshot_num = mb_substr($txt_snapshot,$str_begin,$str_end-$str_begin);
                     //echo $txt_snapshot_num;
 
-                    $query = "UPDATE tbl_order_tovar SET status_otmeni='$str_status_otmeni' WHERE snapshot_num=$txt_snapshot_num";
+                    $blob_picture = $product->find('a img', 0)->outertext;
+                    $blob_picture = mb_substr($blob_picture, mb_strpos($blob_picture, 'src="') + 5, mb_strlen($blob_picture));
+                    $fileName_picture_ali = str_replace('" alt="">', '', $blob_picture);
+
+
+
+
+                    //$query = "UPDATE tbl_order_tovar SET status_otmeni='$str_status_otmeni' WHERE snapshot_num=$txt_snapshot_num";
+                    $query = "UPDATE tbl_order_tovar SET status_otmeni='$str_status_otmeni', fileName_picture_ali= '$fileName_picture_ali' WHERE snapshot_num=$txt_snapshot_num";
                     //echo $query;
                     if (!mysql_query($query))
                         echo "Update failed: $query<br>" . mysql_error() . "<br><br>";

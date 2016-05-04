@@ -89,55 +89,51 @@ class Model_Tovar2vm extends Model
         };
     }
 
-    function parser_picture($ali_id_tovar,$namber_order,$id_ali)
+    function parser_picture()
     {
-        require_once $_SERVER['DOCUMENT_ROOT'] . '/library/simple_html_dom.php';
+        $snapshot_num=$this->get_post('snapshot_num');
+        $namber_order=$this->get_post('namber_order');
 
-        //echo "namber_order = " . $namber_order . " id = " . $id_ali;
+        $url = 'http://g01.a.alicdn.com/kf/UT86qyGXDpaXXagOFbXs.jpg_50x50.jpg';
+        $path = './images/ali-image/logo.jpg';
+        file_put_contents($path, file_get_contents($url));
+        $this->ftp_upload_picture("/public_html/logo33.jpg ", $path);
 
-        $result = $this->get_web_page("http://www.aliexpress.com/snapshot/$ali_id_tovar.html?orderId=$namber_order",$id_ali);
-        //echo $result['errno'];
-        if (($result['errno'] != 0 )||($result['http_code'] != 200))
-        {
-            echo $result['errmsg'];
-        }
-        else
-        {
-            $page = $result['content'];
-            //    echo "Загружаю страницу </br>";
-            //    echo $page;
-            $html = str_get_html($page);
-            (is_object($html->find('.order-status', 0)) ? $str_status=trim($html->find('.order-status', 0)->plaintext) : $str_status="");
-            if (!empty($str_status)) {
 
-                $str_tracknumber= trim($html->find('td[class=no]', 0)->plaintext);
-
-                $query = "UPDATE tbl_order SET status='$str_status', tracknumber='$str_tracknumber' WHERE namber_order=$namber_order";
-                //echo $query;
-                if (!mysql_query($query))
-                    echo "Update failed: $query<br>" . mysql_error() . "<br><br>";
-
-                //$this->model->update_data($query);
-
-                $html = $html->find('.product-table',0);
-                //echo $html;
-
-                $url = 'http://img.yandex.net/i/www/logo.png';
-                $path = './images/logo.png';
-                file_put_contents($path, file_get_contents($url));
-
-                echo "$namber_order - Удачно, об-те стр-цу" . "<br>";
-            }
-            else
-            {
-                echo "$namber_order - Ошибка, обновите куки" . "<br>";
-            }
-        }
     }
 
     private function get_post($var)
     {
         return mysql_real_escape_string($_POST[$var]);
     }
+
+    private function ftp_upload_picture($remote_file,$local_file)
+    {
+        require 'login.php';
+        //$ftp_server="";
+        //$ftp_user_name="";
+        //$ftp_user_pass="";
+        //$file = "";//tobe uploaded
+        //$remote_file = "";
+
+        // set up basic connection
+        $conn_id = ftp_connect($ftp_server);
+        echo $ftp_server;
+
+        // login with username and password
+        $login_result = ftp_login($conn_id, $ftp_user_name, $ftp_user_pass);
+        echo "</br>" . $login_result;
+        // upload a file
+        if (ftp_put($conn_id, $remote_file, $local_file, FTP_BINARY)) {
+            echo "successfully uploaded $local_file\n";
+            //exit;
+        } else {
+            echo "There was a problem while uploading $local_file\n";
+            //exit;
+        }
+        // close the connection
+        echo ftp_close($conn_id);
+    }
+
 
 }
