@@ -91,13 +91,13 @@ class Model_Tovar2vm extends Model
 
     function parser_picture()
     {
-        $snapshot_num=$this->get_post('snapshot_num');
-        $namber_order=$this->get_post('namber_order');
+        /*$snapshot_num=$this->get_post('snapshot_num');
+        $namber_order=$this->get_post('namber_order');*/
 
         $url = 'http://g01.a.alicdn.com/kf/UT86qyGXDpaXXagOFbXs.jpg_50x50.jpg';
         $path = './images/ali-image/logo.jpg';
         file_put_contents($path, file_get_contents($url));
-        $this->ftp_upload_picture("/public_html/logo33.jpg ", $path);
+        $this->ftp_upload_picture("/public_html/logo66.jpg ", $path);
 
 
     }
@@ -107,7 +107,7 @@ class Model_Tovar2vm extends Model
         return mysql_real_escape_string($_POST[$var]);
     }
 
-    private function ftp_upload_picture($remote_file,$local_file)
+    private function ftp_upload_picture($destination_file,$source_file)
     {
         require 'login.php';
         //$ftp_server="";
@@ -117,14 +117,18 @@ class Model_Tovar2vm extends Model
         //$remote_file = "";
 
         // set up basic connection
-        $conn_id = ftp_connect($ftp_server);
+       /* $conn_id = ftp_connect($ftp_server);
         echo $ftp_server;
 
         // login with username and password
         $login_result = ftp_login($conn_id, $ftp_user_name, $ftp_user_pass);
         echo "</br>" . $login_result;
         // upload a file
-        if (ftp_put($conn_id, $remote_file, $local_file, FTP_BINARY)) {
+
+        // включение пассивного режима
+        ftp_pasv($conn_id, true);
+
+        if (ftp_put($conn_id, $remote_file, $local_file, FTP_IMAGE)) {
             echo "successfully uploaded $local_file\n";
             //exit;
         } else {
@@ -132,7 +136,41 @@ class Model_Tovar2vm extends Model
             //exit;
         }
         // close the connection
-        echo ftp_close($conn_id);
+        echo ftp_close($conn_id);*/
+
+        // установка соединения
+        $conn_id = ftp_connect($ftp_server);
+
+// вход с именем пользователя и паролем
+        $login_result = ftp_login($conn_id, $ftp_user_name, $ftp_user_pass);
+
+// проверка соединения
+        if ((!$conn_id) || (!$login_result)) {
+            echo "Не удалось установить соединение с FTP сервером!";
+            echo "Попытка подключения к серверу $ftp_server под именем $ftp_user_name!";
+            exit;
+        } else {
+            echo "Установлено соединение с FTP сервером $ftp_server под именем $ftp_user_name";
+        }
+
+// закачивание файла
+        $upload = ftp_put($conn_id, $destination_file, $source_file, FTP_BINARY);
+
+// проверка результата
+        if (!$upload) {
+            echo "Не удалось закачать файл!";
+        } else {
+            echo "Файл $source_file закачен на $ftp_server под именем $destination_file";
+        }
+
+        if (ftp_chmod($conn_id, 0644, $destination_file) !== false) {
+            echo "Права доступа к файлу $destination_file изменены на 644\n";
+        } else {
+            echo "Не удалось изменить права доступа к файлу $destination_file\n";
+        }
+
+// закрытие соединения
+        ftp_close($conn_id);
     }
 
 
