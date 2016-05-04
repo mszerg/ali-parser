@@ -229,7 +229,7 @@ _END;*/
     }
 
     /**
-     *Обновление товра в таблице tbl_tovar при изменении в сombobox
+     *Обновление товара в таблице tbl_tovar при изменении в сombobox
      */
     function update_vm_tovar()
     {

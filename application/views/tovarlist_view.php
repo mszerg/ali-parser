@@ -5,7 +5,7 @@
    }
 </style>
 
-<link rel="stylesheet" type="text/css" href="/css/style.css" />
+
 <link rel="stylesheet" type="text/css" href="../../jquery-easyui-1.4.5/themes/default/easyui.css">
 <link rel="stylesheet" type="text/css" href="../../jquery-easyui-1.4.5/themes/icon.css">
 <link rel="stylesheet" type="text/css" href="../../jquery-easyui-1.4.5/demo/demo.css">

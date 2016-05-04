@@ -5,6 +5,7 @@
 	top: 76px;*/
 	height: 5px;
 /*	font-family: "Open Sans", sans-serif;*/
+    padding-bottom: 20px;
 }
 
 #menu a {
@@ -27,4 +28,14 @@
 	display: inline;
 	padding: 10px 10px 10px 10px;
 	margin: 0 8px 0 8px;
+}
+
+#pagination li {
+    display: inline;
+    padding: 10px 10px 10px 10px;
+    margin: 0 8px 0 8px;
+}
+
+.inputtext {
+    width: 99%;
 }

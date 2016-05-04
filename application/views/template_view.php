@@ -20,6 +20,8 @@ Modified by VitalySwipe
 		<link href="http://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css" />
 		<link href="http://fonts.googleapis.com/css?family=Kreon" rel="stylesheet" type="text/css" />
 
+        <link rel="stylesheet" type="text/css" href="/css/style.css" />
+
 
 	</head>
 	<body>
@@ -31,7 +33,7 @@ Modified by VitalySwipe
 				<div id="menu">
 					<ul>
 						<li class="first active"><a href="/">Главная</a></li>
-						<li><a href="/services">Услуги</a></li>
+						<li><a href="/tovar2vm/?&start=1">Tovar2vm</a></li>
 						<li><a href="/tovarlist">Список Товаров</a></li>
 						<li class="last"><a href="/contacts">Контакты</a></li>
 					</ul>

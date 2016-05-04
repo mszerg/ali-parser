@@ -330,7 +330,11 @@ function get_post($var)
 }
 
 
-
+/**
+ * @param $namber_order
+ * @param $db_server
+ * @param $id_ali
+ */
 function load_status($namber_order,$db_server,$id_ali)
 {
 	

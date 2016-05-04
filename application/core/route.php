@@ -26,6 +26,9 @@ class Route
 		if ( !empty($routes[2]) )
 		{
 			$action_name = $routes[2];
+            if (substr_count($action_name, "?&start=") > 0) {
+                $action_name="index";
+            }
 		}
 
 		// добавляем префиксы
