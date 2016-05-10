@@ -60,7 +60,7 @@ class Model_Tovarlist extends Model
 		FROM ((tbl_order INNER JOIN tbl_order_user ON tbl_order.id_ali = tbl_order_user.id_ali) INNER JOIN tbl_order_tovar ON tbl_order.namber_order = tbl_order_tovar.namber_order) LEFT JOIN tbl_tovar ON tbl_order_tovar.ali_id_tovar = tbl_tovar.id_import";
         //echo "Фильтр по товару: " . $filtr_tovar . "</br>";
         //Добавляем условия к основному запросу в при нажатии разных кнопок
-        if (!empty($_POST["filter"]) or !empty($_POST["filtr_by_order"]) or !empty($_POST["u_count"]) or !empty($_POST["refresh_status"]) or !empty($_POST['vm_update_count'])) {
+        if (!empty($filtr_tracknumber) or !empty($_POST["filter"]) or !empty($_POST["filtr_by_order"]) or !empty($_POST["u_count"]) or !empty($_POST["refresh_status"]) or !empty($_POST['vm_update_count'])) {
             $where = "";
             if (!empty($filtr_tracknumber)) $where = $this->addWhere($where, "`tracknumber` = '".htmlspecialchars($_POST["find_tracknumber"]))."'";
             if (!empty($_POST["begin_date"])) $where = $this->addWhere($where, "`date_order` >= '".htmlspecialchars(strtotime($_POST["begin_date"])))."'";
@@ -242,12 +242,28 @@ _END;*/
     function update_vm_tovar()
     {
         //$newValue = $this->get_post('newValue');
+        $this->insert_vm_tovar();
         $query = "UPDATE tbl_tovar SET id_virtuemart = " . $this->get_post('newValue') . ", tbl_tovar.NameVirtuemart = \"" . $this->get_post('product_name')  . "\" WHERE (((tbl_tovar.id_import)=" . $this->get_post('ali_id_tovar') . "))";
         //echo $query;
 		if (!mysql_query($query)) echo "Update failed: $query<br>" . mysql_error() . "<br><br>";
 
     }
 
+    /**
+     *Добавление товара в таблице tbl_tovar при изменении в сombobox
+     */
+    function insert_vm_tovar()
+    {
+        //$newValue = $this->get_post('newValue');
+        $ali_id_tovar = $this->get_post('ali_id_tovar');
+        $ali_name_tovar = $this->get_post('ali_name_tovar');
+        $newValue = $this->get_post('newValue');
+        $product_name = $this->get_post('product_name');
+        $query = "INSERT INTO tbl_tovar (id_import, NameTovar , id_virtuemart ,NameVirtuemart) values ('$ali_id_tovar','$ali_name_tovar','$newValue','$product_name')";
+        //echo $query;
+        if (!mysql_query($query)) echo "Insert failed: $query<br>" . mysql_error() . "<br><br>";
+
+    }
     /**
      *Обнуление товра в таблице tbl_tovar при нажатии крестика (отмена) в сombobox
      */

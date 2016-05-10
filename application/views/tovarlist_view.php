@@ -15,9 +15,20 @@
 <script type="text/javascript" src="../../js/jquery.scannerdetection.js"></script>
 
 <script type="text/javascript" src="/js/tovar_view_button.js"></script>
+<script type="text/javascript" src="/js/jquery.session.js"></script>
+
 
 <script type="text/javascript">
-    $(document).scannerDetection(function(data){$('#tracknumber').val(data);});
+    $(document).scannerDetection(function(data)
+    {
+        $('#tracknumber').val(data);
+        $.session.set("filtr_AllRecord", "1");
+        $.session.set("filtr_tracknumber", data);
+        //$.post( "/tovarlist/", { filter: "Фильтр"} );
+        $('#form').submit();
+
+    });
+
 </script>
 
 <?php
@@ -32,7 +43,6 @@
 (isset($_SESSION["filtr_begin_date"])   ? $filtr_begin_date = htmlspecialchars($_SESSION['filtr_begin_date']) 	: $filtr_begin_date="");
 (isset($_SESSION["filtr_end_date"])     ? $filtr_end_date = htmlspecialchars($_SESSION['filtr_end_date']) 		: $filtr_end_date="");
 
-
 /////////////////////////////////////////// Форма фильтра ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 if ($filtr_AllRecord==2) $str_AllRecord = '<input type="radio" name="AllRecord" id="AllRecord1" value=1 /><label for="AllRecord1">Последние 100 записей</label> <input type="radio" checked="checked" name="AllRecord" id="AllRecord2" value=2 /><label for="AllRecord2">Все записи&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</label>';
@@ -42,7 +52,7 @@ else $str_AllRecord = '<input type="radio" checked="checked" name="AllRecord" id
 //echo($_POST["AllRecord"]);
 
 echo <<<_END
-<form name="form" action="" method="post">
+<form id="form" name="form" action="" method="post">
     <table>
         <tr>
 			<td>$str_AllRecord</td>
@@ -52,7 +62,7 @@ echo <<<_END
             <td>Кон дата (ДД.ММ.ГГГГ)<input type="text" name="end_date" value = $filtr_end_date></td>
             <td>Товар   <input type="text" name="find_tovar" value = $filtr_tovar></td>
             <td colspan="2">
-                <input type="submit" name="filter" value="Фильтр" />
+                <input id = "butFilter" type="submit" name="filter" value="Фильтр" />
 				<input type="submit" name="delfilter" value="Удалить Фильтр" />
 				<input id = "Refresh_All_Status" type="button" name="RefreshAllStatus" value="Обновить всем статус" />
             </td>
@@ -94,7 +104,7 @@ foreach($data as $row)
 		</td>
 _END;
         echo "<td>" . date("d.m.Y", $row["date_order"]) . "</td>";
-        echo "<td><img src=\"image.php?id=" . $row["id_tovar_order"] . "\" alt=\"\" /></td>";
+        echo "<td><img src=\"/image.php?id=" . $row["id_tovar_order"] . "\" alt=\"\" /></td>";
         echo "<td>$row[name]</td>";
 		echo "<td>
                 <input id=\"cc\" class=\"easyui-combobox\" name=\"dept\" value='$row[id_virtuemart]'
@@ -121,7 +131,7 @@ _END;
                                     $.ajax({
                                     type:'POST',
                                     url:'/tovarlist/update_vm_tovar/',
-                                    data:'newValue=' + rec.virtuemart_product_id + '&product_name=' + rec.product_name + '&ali_id_tovar=' +" . $row['ali_id_tovar'] . ",
+                                    data:'newValue=' + rec.virtuemart_product_id + '&product_name=' + rec.product_name + '&ali_id_tovar=' + " . $row['ali_id_tovar'] . " + '&ali_name_tovar=' + '" . $row['name'] . "',
                                     success:function(result){
                                          /*alert(result)*/},
                                     error: function(){

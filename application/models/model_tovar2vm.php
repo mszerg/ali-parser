@@ -97,7 +97,12 @@ class Model_Tovar2vm extends Model
         $url = 'http://g01.a.alicdn.com/kf/UT86qyGXDpaXXagOFbXs.jpg_50x50.jpg';
         $path = './images/ali-image/logo.jpg';
         file_put_contents($path, file_get_contents($url));
-        $this->ftp_upload_picture("/public_html/logo66.jpg ", $path);
+        /*$this->ftp_upload_picture("/public_html/logo66.jpg ", $path);*/
+
+        $newfile="/media/files/htdocs/temp.st/logo2.jpg";
+        if (!copy($path, $newfile)) {
+            echo "не удалось скопировать $file...\n";
+        }
 
 
     }
