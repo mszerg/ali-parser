@@ -139,7 +139,9 @@ _END;
                                         }
                                     });
                                 }\">
-            </td>";
+                                Коробка - ";
+            printf('%.0F', (float)$row['product_packaging']);
+        echo "</td>";
 		echo "<td><a href=\"http://ru.aliexpress.com/store/$row[ali_id_store]\">$row[store]</a></td>";
         echo "<td id='sum_$j'>$row[price]</td>";
         echo "<td id='count_partiy_$j'>$row[count_partiy]</td>";

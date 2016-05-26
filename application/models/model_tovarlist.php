@@ -56,8 +56,14 @@ class Model_Tovarlist extends Model
         (isset($_SESSION["filtr_end_date"])     ? $filtr_end_date = htmlspecialchars($_SESSION['filtr_end_date']) 		: $filtr_end_date="");
 
         // Главный запрос на выборку без Where и Order by
-        $sql  = "SELECT tbl_order_user.*, tbl_order.*, tbl_order_tovar.*, tbl_tovar.id_virtuemart, tbl_tovar.NameVirtuemart
-		FROM ((tbl_order INNER JOIN tbl_order_user ON tbl_order.id_ali = tbl_order_user.id_ali) INNER JOIN tbl_order_tovar ON tbl_order.namber_order = tbl_order_tovar.namber_order) LEFT JOIN tbl_tovar ON tbl_order_tovar.ali_id_tovar = tbl_tovar.id_import";
+        /*$sql  = "SELECT tbl_order_user.*, tbl_order.*, tbl_order_tovar.*, tbl_tovar.id_virtuemart, tbl_tovar.NameVirtuemart
+		FROM ((tbl_order INNER JOIN tbl_order_user ON tbl_order.id_ali = tbl_order_user.id_ali) INNER JOIN tbl_order_tovar ON tbl_order.namber_order = tbl_order_tovar.namber_order) LEFT JOIN tbl_tovar ON tbl_order_tovar.ali_id_tovar = tbl_tovar.id_import";*/
+        $sql  = "SELECT tbl_order_user.*, tbl_order.*, tbl_order_tovar.*, tbl_tovar.id_virtuemart, tbl_tovar.NameVirtuemart, mszerg_autohome.v3t_virtuemart_products.product_packaging
+            FROM (((tbl_order INNER JOIN tbl_order_user ON tbl_order.id_ali = tbl_order_user.id_ali)
+            INNER JOIN tbl_order_tovar ON tbl_order.namber_order = tbl_order_tovar.namber_order)
+            LEFT JOIN tbl_tovar ON tbl_order_tovar.ali_id_tovar = tbl_tovar.id_import)
+            LEFT JOIN mszerg_autohome.v3t_virtuemart_products ON tbl_tovar.id_virtuemart = mszerg_autohome.v3t_virtuemart_products.virtuemart_product_id";
+
         //echo "Фильтр по товару: " . $filtr_tovar . "</br>";
         //Добавляем условия к основному запросу в при нажатии разных кнопок
         if (!empty($filtr_tracknumber) or !empty($_POST["filter"]) or !empty($_POST["filtr_by_order"]) or !empty($_POST["u_count"]) or !empty($_POST["refresh_status"]) or !empty($_POST['vm_update_count'])) {

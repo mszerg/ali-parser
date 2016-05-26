@@ -324,7 +324,7 @@ if (!empty($_POST["zagruzka"]) && isset($_POST['stranica_begin']) && isset($_POS
                     //echo 'second'  . "</br>";
 					//echo $txt_status_otmeni;
                     $query = "INSERT INTO tbl_order_tovar VALUES" .
-                        "('', '$int_order', '$blob_picture', '$int_ali_id_tovar','" . mysql_escape_mimic($txt_name_tovar) . "', \"$txt_manager\", '$dec_price', '$int_count', '$int_count', '" . mysql_escape_mimic($txt_status_otmeni) . "', '$txt_snapshot_num', '$bl_mobile',0)";
+                        "('', '$int_order', '$blob_picture', '$int_ali_id_tovar','" . mysql_escape_mimic($txt_name_tovar) . "', \"$txt_manager\", '$dec_price', '$int_count', '$int_count', '" . mysql_escape_mimic($txt_status_otmeni) . "', '$txt_snapshot_num', '$bl_mobile',0,'')";
 
                     if (!mysql_query($query, $db_server))
                         echo "INSERT failed: $query<br>" . mysql_error() . "<br><br>";
