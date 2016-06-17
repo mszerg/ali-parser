@@ -218,8 +218,8 @@ _END;*/
 		////////////////////////////////////// Отрабатывваем кнопку Об-ть кол-во
 		if (isset($_POST['u_count']) && isset($_POST['id_tovar_order']))
 		{
-			$id_tovar_order = get_post('id_tovar_order');
-			$u_count = get_post('u_count');
+			$id_tovar_order = $this->get_post('id_tovar_order');
+			$u_count = $this->get_post('u_count');
 			$query = "UPDATE tbl_order_tovar SET count='$u_count' WHERE id_tovar_order='$id_tovar_order'";
 			//echo $query;
 			if (!mysql_query($query))

@@ -27,6 +27,7 @@ $(document).ready(function(){
     });
     });
 
+// Кнопка обновить количество
 $(document).ready(function(){
 
     $('[id*=but2_]').click(function(){

@@ -106,13 +106,18 @@ _END;
         echo "<td>" . date("d.m.Y", $row["date_order"]) . "</td>";
         echo "<td><img src=\"/image.php?id=" . $row["id_tovar_order"] . "\" alt=\"\" /></td>";
         echo "<td>$row[name]</td>";
+        $str_json="[{'virtuemart_product_id':'1','product_name':'Arduino Leonardo'}]";
 		echo "<td>
-                <input id=\"cc\" class=\"easyui-combobox\" name=\"dept\" value='$row[id_virtuemart]'
+                <input id=\"cc_$j\" class='easyui-combobox' name=\"dept\" value='$row[id_virtuemart]'
                 data-options = \"valueField:'virtuemart_product_id',
                                textField:'product_name',
-                               url:'/tovarlist/get_vm_tovar',
+                                data: [
+                                    {virtuemart_product_id:'" . $row['id_virtuemart'] . "',product_name:'" . $row['NameVirtuemart'] . "'},
+                                ],
                                icons:[{
-                               iconCls:'icon-save'
+                               iconCls:'icon-reload',handler:function(){
+                                    $('#cc_$j').combobox('reload', '/tovarlist/get_vm_tovar')
+                               }
                                     },{
                                iconCls:'icon-cancel',handler:function(){
                                         $.ajax({
